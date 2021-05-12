@@ -1,0 +1,18 @@
+main: com.hypermnesia.blockly.Main
+name: Blockly
+version: 1.0.1
+author: Hippo (Hypermnesia)
+description: ur bad nerd get a life
+api-version: 1.16
+
+commands:
+  challenge:
+    aliases: chal
+  executescenario:
+    aliases: es
+  stickofban:
+    aliases: sob
+  hippospeak:
+    aliases: hs
+  targetblock:
+    aliases: tb
