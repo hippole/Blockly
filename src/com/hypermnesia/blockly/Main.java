@@ -122,9 +122,9 @@ public class Main extends JavaPlugin implements Listener {
         if (scenario.equalsIgnoreCase("mlg")) {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 Location mlg = new Location(Bukkit.getWorld("world"), player.getLocation().getX(), 250, player.getLocation().getZ(), 0, 0);
-                Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
                 player.sendTitle(ChatColor.DARK_RED + "MLG", ChatColor.RED + "Get teleported to Y=250.", 10, 20, 10);
                 player.teleport(mlg);
+                Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
             }
             Bukkit.broadcastMessage(ChatColor.DARK_RED + "MLG: " + ChatColor.RED + "Get teleported to Y=250.");
         }
@@ -334,7 +334,7 @@ public class Main extends JavaPlugin implements Listener {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
                                         World world = Bukkit.getServer().getWorld("world");
                                         Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
-                                        player.sendTitle(ChatColor.RED + "TNT", ChatColor.RED + "TNT spawns on your feet.", 10, 20, 10);
+                                        player.sendTitle(ChatColor.DARK_RED + "TNT", ChatColor.RED + "TNT spawns on your feet.", 10, 20, 10);
                                         world.spawnEntity(player.getLocation(), EntityType.PRIMED_TNT);
                                     }
                                     Bukkit.broadcastMessage(ChatColor.DARK_RED + "TNT: " + ChatColor.RED + "TNT spawns on your feet.");
@@ -342,7 +342,7 @@ public class Main extends JavaPlugin implements Listener {
                                 if (list.get(index).equalsIgnoreCase("blindness")) {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
                                         Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
-                                        player.sendTitle(ChatColor.RED + "Blindness", ChatColor.RED + "Blindness for 1 minute.", 10, 20, 10);
+                                        player.sendTitle(ChatColor.DARK_RED + "Blindness", ChatColor.RED + "Blindness for 1 minute.", 10, 20, 10);
                                         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 1200, 2));
                                     }
                                     Bukkit.broadcastMessage(ChatColor.DARK_RED + "Blindness: " + ChatColor.RED + "Blindness for 1 minute.");
@@ -351,7 +351,7 @@ public class Main extends JavaPlugin implements Listener {
                                 if (list.get(index).equalsIgnoreCase("hunger")) {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
                                         Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
-                                        player.sendTitle(ChatColor.RED + "Hunger", ChatColor.RED + "Hunger 10 for 1 minute.", 10, 20, 10);
+                                        player.sendTitle(ChatColor.DARK_RED + "Hunger", ChatColor.RED + "Hunger 10 for 1 minute.", 10, 20, 10);
                                         player.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, 1200, 9));
                                     }
                                     Bukkit.broadcastMessage(ChatColor.DARK_RED + "Hunger: " + ChatColor.RED + "Hunger 10 for 1 minute.");
@@ -367,7 +367,7 @@ public class Main extends JavaPlugin implements Listener {
                                 if (list.get(index).equalsIgnoreCase("miningfatigue")) {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
                                         Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
-                                        player.sendTitle(ChatColor.RED + "Mining Fatigue", ChatColor.RED + "Mining Fatigue for 1 minute.", 10, 20, 10);
+                                        player.sendTitle(ChatColor.DARK_RED + "Mining Fatigue", ChatColor.RED + "Mining Fatigue for 1 minute.", 10, 20, 10);
                                         player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 1200, 0));
                                     }
                                     Bukkit.broadcastMessage(ChatColor.DARK_RED + "Mining Fatigue: " + ChatColor.RED + "Mining fatigue for 1 minute.");
@@ -416,9 +416,9 @@ public class Main extends JavaPlugin implements Listener {
                                 if (list.get(index).equalsIgnoreCase("mlg")) {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
                                         Location mlg = new Location(Bukkit.getWorld("world"), player.getLocation().getX(), 250, player.getLocation().getZ(), 0, 0);
-                                        Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
                                         player.sendTitle(ChatColor.RED + "MLG", ChatColor.RED + "Get teleported to Y=250.", 10, 20, 10);
                                         player.teleport(mlg);
+                                        Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
                                     }
                                     Bukkit.broadcastMessage(ChatColor.DARK_RED + "MLG: " + ChatColor.RED + "Get teleported to Y=250.");
                                 }
@@ -443,7 +443,7 @@ public class Main extends JavaPlugin implements Listener {
                                 if (list.get(index).equalsIgnoreCase("efficiency")) {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
                                         Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
-                                        player.sendTitle(ChatColor.GREEN + "Efficiency", ChatColor.GREEN + "Your current item held gets enchanted with efficiency 1.", 10, 20, 10);
+                                        player.sendTitle(ChatColor.DARK_GREEN + "Efficiency", ChatColor.GREEN + "Your current item held gets enchanted with efficiency 1.", 10, 20, 10);
                                         player.getInventory().getItemInMainHand().addUnsafeEnchantment(Enchantment.DIG_SPEED, 1);
                                     }
                                     Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Efficiency: " + ChatColor.GREEN + "Your current item held gets enchanted with efficiency 1.");
@@ -579,7 +579,12 @@ public class Main extends JavaPlugin implements Listener {
                     }
                     targetBlock = args[0];
                     player.sendMessage(ChatColor.GREEN + "Successfully set the target block to " + ChatColor.GOLD + Material.matchMaterial(targetBlock));
-                }
+                    for (Player playerNotify : Bukkit.getOnlinePlayers()) {
+                        playerNotify.sendTitle(ChatColor.DARK_PURPLE + "Target Block Changed", ChatColor.LIGHT_PURPLE + "New target block is " + Material.matchMaterial(targetBlock), 10, 20, 10);
+                        Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0F, 1.0F);
+                    }
+
+                    }
             }
         } catch (Exception e) {
         e.printStackTrace();
