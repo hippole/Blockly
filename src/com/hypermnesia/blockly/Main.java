@@ -1,36 +1,36 @@
 package com.hypermnesia.blockly;
 
-        import net.md_5.bungee.api.ChatMessageType;
-        import net.md_5.bungee.api.chat.TextComponent;
-        import org.bukkit.*;
-        import org.bukkit.command.Command;
-        import org.bukkit.command.CommandSender;
-        import org.bukkit.configuration.file.FileConfiguration;
-        import org.bukkit.enchantments.Enchantment;
-        import org.bukkit.entity.EntityType;
-        import org.bukkit.entity.Player;
-        import org.bukkit.event.EventHandler;
-        import org.bukkit.event.Listener;
-        import org.bukkit.event.block.BlockBreakEvent;
-        import org.bukkit.event.entity.EntityDamageByEntityEvent;
-        import org.bukkit.event.entity.EntityDamageEvent;
-        import org.bukkit.event.entity.PlayerDeathEvent;
-        import org.bukkit.event.player.AsyncPlayerChatEvent;
-        import org.bukkit.event.player.PlayerMoveEvent;
-        import org.bukkit.inventory.Inventory;
-        import org.bukkit.inventory.ItemFlag;
-        import org.bukkit.inventory.ItemStack;
-        import org.bukkit.inventory.meta.ItemMeta;
-        import org.bukkit.plugin.Plugin;
-        import org.bukkit.plugin.java.JavaPlugin;
-        import org.bukkit.potion.PotionEffect;
-        import org.bukkit.potion.PotionEffectType;
-        import org.bukkit.scheduler.BukkitRunnable;
-        import org.bukkit.scheduler.BukkitTask;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
-        import java.util.ArrayList;
-        import java.util.List;
-        import java.util.StringJoiner;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringJoiner;
 
 public class Main extends JavaPlugin implements Listener {
 
