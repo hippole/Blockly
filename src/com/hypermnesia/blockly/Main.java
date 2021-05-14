@@ -1,45 +1,57 @@
 package com.hypermnesia.blockly;
 
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.*;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.inventory.ItemFlag;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
+        import net.md_5.bungee.api.ChatMessageType;
+        import net.md_5.bungee.api.chat.TextComponent;
+        import org.bukkit.*;
+        import org.bukkit.command.Command;
+        import org.bukkit.command.CommandSender;
+        import org.bukkit.configuration.file.FileConfiguration;
+        import org.bukkit.enchantments.Enchantment;
+        import org.bukkit.entity.EntityType;
+        import org.bukkit.entity.Player;
+        import org.bukkit.event.EventHandler;
+        import org.bukkit.event.Listener;
+        import org.bukkit.event.block.BlockBreakEvent;
+        import org.bukkit.event.entity.EntityDamageByEntityEvent;
+        import org.bukkit.event.entity.EntityDamageEvent;
+        import org.bukkit.event.entity.PlayerDeathEvent;
+        import org.bukkit.event.player.AsyncPlayerChatEvent;
+        import org.bukkit.event.player.PlayerMoveEvent;
+        import org.bukkit.inventory.Inventory;
+        import org.bukkit.inventory.ItemFlag;
+        import org.bukkit.inventory.ItemStack;
+        import org.bukkit.inventory.meta.ItemMeta;
+        import org.bukkit.plugin.Plugin;
+        import org.bukkit.plugin.java.JavaPlugin;
+        import org.bukkit.potion.PotionEffect;
+        import org.bukkit.potion.PotionEffectType;
+        import org.bukkit.scheduler.BukkitRunnable;
+        import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.List;
+        import java.util.ArrayList;
+        import java.util.List;
+        import java.util.StringJoiner;
 
 public class Main extends JavaPlugin implements Listener {
 
     FileConfiguration config = this.getConfig();
     public boolean gameIsRunning = false;
     public String targetBlock = "diamond_ore";
+    public List<String> list = new ArrayList<String>();
+    public List<String> Lost = new ArrayList<String>();
+    public boolean typingTestIsActive = false;
+    public List<String> phrases = new ArrayList<String>();
+    public String chosenPhrase = "hippo is supreme";
+    public Plugin plugin = this;
 
-    int randomWithRange(int min, int max) {
+    public int randomWithRange(int min, int max) {
 
         int range = (max - min) + 1;
         return (int) (Math.random() * range) + min;
 
     }
 
-    public void executeScenario(String scenario) {
+    public void executeScenario(String scenario, String[] args) {
         if (scenario.equalsIgnoreCase("tnt")) {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 World world = Bukkit.getServer().getWorld("world");
@@ -119,14 +131,39 @@ public class Main extends JavaPlugin implements Listener {
             }
             Bukkit.broadcastMessage(ChatColor.DARK_RED + "Instant Damage: " + ChatColor.RED + "Receive Instant Damage 2.");
         }
-        if (scenario.equalsIgnoreCase("mlg")) {
+        if (scenario.equalsIgnoreCase("typingtest")) {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                Location mlg = new Location(Bukkit.getWorld("world"), player.getLocation().getX(), 250, player.getLocation().getZ(), 0, 0);
-                player.sendTitle(ChatColor.DARK_RED + "MLG", ChatColor.RED + "Get teleported to Y=250.", 10, 20, 10);
-                player.teleport(mlg);
+                Lost.add(player.getName());
+                typingTestIsActive = true;
+                String phrase;
+                phrases.add("hippo is supreme god");
+                phrases.add("i will give hippo my lunch");
+                phrases.add("i will buy hippo MVP++ rank on hypixel");
+                phrases.add("i will buy hippo ice cream");
+                phrases.add("petition to give hippo developer role");
+                phrase = phrases.get(this.randomWithRange(0, phrases.size()));
+                if (args.length > 1) {
+                    StringJoiner joiner = new StringJoiner(" ");
+                    for (int x = 1; x < args.length; x++){
+                        joiner.add(args[x]);
+                    }
+                    phrase = joiner.toString();
+                }
+                chosenPhrase = phrase;
+                player.sendTitle(ChatColor.DARK_RED + "Typing Test", ChatColor.RED + "Type the following phrase in chat within 10 seconds or you will die.", 10, 20, 10);
+                player.sendMessage(ChatColor.YELLOW + "Type the following phrase in 10 seconds: " + ChatColor.GOLD + phrase);
                 Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
+                new BukkitRunnable(){
+                    public void run(){
+                        for (int x = 0; x < Lost.size(); x++){
+                            Bukkit.getPlayer(Lost.get(x)).setHealth(0);
+                        }
+                        typingTestIsActive = false;
+                        Lost.clear();
+                    }
+                }.runTaskLater(this, 200);
             }
-            Bukkit.broadcastMessage(ChatColor.DARK_RED + "MLG: " + ChatColor.RED + "Get teleported to Y=250.");
+            Bukkit.broadcastMessage(ChatColor.DARK_RED + "Typing Test: " + ChatColor.RED + "Type the following phrase in chat within 10 seconds or you will die.");
         }
         if (scenario.equalsIgnoreCase("gapple")) {
             for (Player player : Bukkit.getOnlinePlayers()) {
@@ -208,13 +245,78 @@ public class Main extends JavaPlugin implements Listener {
             Bukkit.broadcastMessage(ChatColor.DARK_BLUE + "No Moving: " + ChatColor.BLUE + "Moving is cringe anyway, Me and the boys use enderpearls.");
             Bukkit.broadcastMessage(ChatColor.DARK_BLUE + "" + ChatColor.BOLD + "This is a special scenario! This can only be triggered via the host with a command.");
         }
+
+        if (scenario.equalsIgnoreCase("fakefly")) {
+            Material rocket = Material.FIREWORK_ROCKET;
+            ItemStack gib = new ItemStack(rocket);
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 1.0F, 1.0F);
+                player.sendTitle(ChatColor.DARK_BLUE + "Elytra", ChatColor.BLUE + "Get teleported to y=300 with an elytra and 5 firework rockets.", 10, 20, 10);
+                Location mlg = new Location(Bukkit.getWorld("world"), player.getLocation().getX(), 300, player.getLocation().getZ(), 0, 0);
+                player.teleport(mlg);
+                if (player.getInventory().firstEmpty() == -1) {
+                    player.sendMessage(ChatColor.RED + "You didn't have enoungh room in your inventory! Shame. ok have fun mlg");
+                }
+                player.getInventory().addItem(FakeElytra());
+                for (int x = 0; x < 5; x++) {
+                    if (player.getInventory().firstEmpty() == -1) {
+                        break;
+                    }
+                    player.getInventory().addItem(gib);
+                }
+            }
+            new BukkitRunnable() {
+                public void run() {
+                    Bukkit.broadcastMessage(ChatColor.DARK_RED + "Elytra: " + ChatColor.RED + "Sike.");
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_DEATH, 1.0F, 1.0F);
+                        player.sendTitle(ChatColor.DARK_RED + "Elytra", ChatColor.RED + "Sike.", 10, 20, 10);
+                        if (player.getInventory().contains(Material.ELYTRA)) {
+                            Inventory inventory = player.getInventory();
+
+                            for (ItemStack inv : inventory.getContents()) {
+
+                                try {
+                                    if (inv.getType().equals(Material.ELYTRA)) {
+                                        player.getInventory().remove(inv);
+                                    }
+                                } catch (NullPointerException e) {
+
+                                }
+                            }
+                        }
+                        try {
+                            if (player.getInventory().getChestplate().getItemMeta().getDisplayName().contains(ChatColor.BLUE +  "Free Elytra")) {
+                                player.getInventory().setChestplate(null);
+                            }
+                        } catch (NullPointerException e) {
+
+                        }
+                    }
+                }
+            }.runTaskLater(this, 200);
+            Bukkit.broadcastMessage(ChatColor.DARK_BLUE + "Elytra: " + ChatColor.BLUE + "Get teleported to y=300 with an elytra and 5 firework rockets.");
+            Bukkit.broadcastMessage(ChatColor.DARK_BLUE + "" + ChatColor.BOLD + "This is a special scenario! This can only be triggered via the host with a command.");
+        }
+        if (scenario.equalsIgnoreCase("anklemonitor")) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 1.0F, 1.0F);
+                player.sendTitle(ChatColor.DARK_BLUE + "Ankle Monitor", ChatColor.BLUE + "No more snek for you.", 10, 20, 10);
+                player.getInventory().setBoots(AnkleMonitor());
+            }
+            Bukkit.broadcastMessage(ChatColor.DARK_BLUE + "Ankle Monitor: " + ChatColor.BLUE + "No more snek for you.");
+            Bukkit.broadcastMessage(ChatColor.DARK_BLUE + "" + ChatColor.BOLD + "This is a special scenario! This can only be triggered via the host with a command.");
+        }
     }
+
 
 
     @Override
     public void onEnable() {
         System.out.println("[Blockly] server here again :D");
         config.addDefault("extra-pain-mode", false);
+        config.addDefault("blocks-required", false);
+        config.addDefault("block-limit", 5);
         config.options().copyDefaults(true);
         saveConfig();
         this.getServer().getPluginManager().registerEvents(this, this);
@@ -266,7 +368,6 @@ public class Main extends JavaPlugin implements Listener {
                             return true;
                         }
                         gameIsRunning = true;
-                        List<String> list = new ArrayList<String>();
                         list.add("TNT");
                         list.add("BLINDNESS");
                         list.add("HUNGER");
@@ -276,7 +377,7 @@ public class Main extends JavaPlugin implements Listener {
                         list.add("ROULETTE");
                         list.add("SILVERFISH");
                         list.add("INSTANTDAMAGE");
-                        list.add("MLG");
+                        list.add("TYPINGTEST");
                         list.add("GAPPLE");
                         list.add("MANIACMINER");
                         list.add("EFFICIENCY");
@@ -324,11 +425,12 @@ public class Main extends JavaPlugin implements Listener {
                             }
                         }.runTaskLater(this, 260);
 
-                        Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                        new BukkitRunnable() {
                             public void run() {
                                 int index = (int) (Math.random() * list.size());
                                 if (!gameIsRunning) {
                                     Bukkit.getServer().getScheduler().cancelTask(1);
+                                    cancel();
                                 }
                                 if (list.get(index).equalsIgnoreCase("tnt")) {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
@@ -413,14 +515,39 @@ public class Main extends JavaPlugin implements Listener {
                                     }
                                     Bukkit.broadcastMessage(ChatColor.DARK_RED + "Instant Damage: " + ChatColor.RED + "Receive Instant Damage 2.");
                                 }
-                                if (list.get(index).equalsIgnoreCase("mlg")) {
+                                if (list.get(index).equalsIgnoreCase("typingtest")) {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
-                                        Location mlg = new Location(Bukkit.getWorld("world"), player.getLocation().getX(), 250, player.getLocation().getZ(), 0, 0);
-                                        player.sendTitle(ChatColor.RED + "MLG", ChatColor.RED + "Get teleported to Y=250.", 10, 20, 10);
-                                        player.teleport(mlg);
+                                        Lost.add(player.getName());
+                                        typingTestIsActive = true;
+                                        String phrase;
+                                        phrases.add("hippo is supreme god");
+                                        phrases.add("i will give hippo my lunch");
+                                        phrases.add("i will buy hippo MVP++ rank on hypixel");
+                                        phrases.add("i will buy hippo ice cream");
+                                        phrases.add("petition to give hippo developer role");
+                                        phrase = phrases.get(this.randomWithRange(0, phrases.size()));
+                                        if (args.length > 1) {
+                                            StringJoiner joiner = new StringJoiner(" ");
+                                            for (int x = 1; x < args.length; x++){
+                                                joiner.add(args[x]);
+                                            }
+                                            phrase = joiner.toString();
+                                        }
+                                        chosenPhrase = phrase;
+                                        player.sendTitle(ChatColor.DARK_RED + "Typing Test", ChatColor.RED + "Type the following phrase in chat within 10 seconds or you will die.", 10, 20, 10);
+                                        player.sendMessage(ChatColor.YELLOW + "Type the following phrase in 10 seconds: " + ChatColor.GOLD + phrase);
                                         Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.BLOCK_ANVIL_DESTROY, 1.0F, 1.0F);
+                                        new BukkitRunnable() {
+                                            public void run() {
+                                                for (int x = 0; x < Lost.size(); x++){
+                                                    Bukkit.getPlayer(Lost.get(x)).setHealth(0);
+                                                }
+                                                typingTestIsActive = false;
+                                                Lost.clear();
+                                            }
+                                        }.runTaskLater(plugin,200);
                                     }
-                                    Bukkit.broadcastMessage(ChatColor.DARK_RED + "MLG: " + ChatColor.RED + "Get teleported to Y=250.");
+                                    Bukkit.broadcastMessage(ChatColor.DARK_RED + "Typing Test: " + ChatColor.RED + "Type the following phrase in chat within 10 seconds or you will die.");
                                 }
                                 if (list.get(index).equalsIgnoreCase("gapple")) {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
@@ -466,8 +593,15 @@ public class Main extends JavaPlugin implements Listener {
                                 }
                             }
 
+                            private int randomWithRange(int min, int max) {
 
-                        }, 2400, 2400);
+                                int range = (max - min) + 1;
+                                return (int) (Math.random() * range) + min;
+
+                            }
+
+
+                        }.runTaskTimer(this,240,240);
                     }
                     if (args[0].equalsIgnoreCase("end")) {
                         gameIsRunning = false;
@@ -499,12 +633,21 @@ public class Main extends JavaPlugin implements Listener {
                 try {
                     Player player = (Player) sender;
                     if (player.hasPermission("executescenario.use")) {
-                        this.executeScenario(args[0]);
+                        this.executeScenario(args[0], args);
+                        for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                            if (playerOP.isOp()) {
+                                if (args[0].equalsIgnoreCase("tnt") || args[0].equalsIgnoreCase("blindness") || args[0].equalsIgnoreCase("hunger") || args[0].equalsIgnoreCase("miningfatigue") || args[0].equalsIgnoreCase("clearinv") || args[0].equalsIgnoreCase("roulette") || args[0].equalsIgnoreCase("silverfish") || args[0].equalsIgnoreCase("instantdamage") || args[0].equalsIgnoreCase("typingtest")
+                                        || args[0].equalsIgnoreCase("gapple") || args[0].equalsIgnoreCase("maniacminer") || args[0].equalsIgnoreCase("efficiency") || args[0].equalsIgnoreCase("fireres") || args[0].equalsIgnoreCase("invincibility") || args[0].equalsIgnoreCase("dog") || args[0].equalsIgnoreCase("nomoving") || args[0].equalsIgnoreCase("fakefly") || args[0].equalsIgnoreCase("anklemonitor")) {
+                                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (" + args[0].toLowerCase() + ")");
+                                } else {
+                                    playerOP.sendMessage(ChatColor.RED + player.getName() + " attempted to execute a scenario but failed. Try checking the spelling.");
+                                }
+                            }
+                        }
                         if (args[0].equalsIgnoreCase("list")) {
-                            player.sendMessage(ChatColor.GOLD + "Available list of scenarios: \n" + ChatColor.RED + "Bad scenarios: \nTNT,BLINDNESS,HUNGER,WITHER,MININGFATIGUE,CLEARINV,ROULETTE,SILVERFISH,INSTANTDAMAGE,MLG.\n" + ChatColor.GREEN + "Good scenarios: \nGAPPLE,MANIACMINER,EFFICIENCY,FIRERES,INVINCIBILITY. \n" + ChatColor.BLUE + "Special scenarios: \n DOG,NOMOVING");
+                            player.sendMessage(ChatColor.GOLD + "Available list of scenarios: \n" + ChatColor.RED + "Bad scenarios: \nTNT,BLINDNESS,HUNGER,WITHER,MININGFATIGUE,CLEARINV,ROULETTE,SILVERFISH,INSTANTDAMAGE,TYPINGTEST.\n" + ChatColor.GREEN + "Good scenarios: \nGAPPLE,MANIACMINER,EFFICIENCY,FIRERES,INVINCIBILITY. \n" + ChatColor.BLUE + "Special scenarios: \n DOG,NOMOVING,FAKEFLY,ANKLEMONITOR");
                             return true;
                         }
-
                     } else {
                         player.sendMessage(ChatColor.RED + "Insufficient Permission");
                     }
@@ -541,6 +684,10 @@ public class Main extends JavaPlugin implements Listener {
                 Player player = (Player) sender;
                 List<String> list = new ArrayList<String>();
                 if (player.hasPermission("hippospeak.use")) {
+                    if (args.length == 0) {
+                        player.sendMessage(ChatColor.RED + "Ussage: /hippospeak <message>");
+                        return true;
+                    }
                     for (int x = 0; x < args.length; x++) {
                         list.add(args[x]);
                     }
@@ -558,7 +705,7 @@ public class Main extends JavaPlugin implements Listener {
                         world.playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 1.0F, 1.0F);
                         playerAll.sendTitle(ChatColor.DARK_RED + "Hippo has spoken!", ChatColor.RED + "Check the chat for more information.", 10, 20, 10);
                     }
-                    } else {
+                } else {
                     player.sendMessage(ChatColor.RED + "You are not hippo >:O");
                 }
             }
@@ -584,30 +731,43 @@ public class Main extends JavaPlugin implements Listener {
                         Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0F, 1.0F);
                     }
 
-                    }
+                }
             }
         } catch (Exception e) {
-        e.printStackTrace();
-    }
+            e.printStackTrace();
+        }
         return false;
-}
+    }
 
+    @EventHandler
+    public void onChatMessage(AsyncPlayerChatEvent event){
+        if (typingTestIsActive) {
+            if (event.getMessage().equals(chosenPhrase)){
+                event.getPlayer().sendMessage(ChatColor.GREEN + "Congrats you get to live!" + ChatColor.DARK_PURPLE + " :)");
+                Lost.remove(event.getPlayer().getName());
+            }
+        }
+    }
 
     @EventHandler
     public void onBlockBreak (BlockBreakEvent event) {
+        if (config.getBoolean("blocks-required")) {
+
+        }
         if (event.getBlock().getType().equals(Material.matchMaterial(targetBlock))) {
             gameIsRunning = false;
+            Player winner = (Player) event.getPlayer();
+            Bukkit.broadcastMessage(ChatColor.GOLD + winner.getDisplayName() + ChatColor.GREEN + " has found the target block! " + ChatColor.AQUA + "(" + Material.matchMaterial(targetBlock) + ")");
             for (Player player : Bukkit.getOnlinePlayers()) {
-                Bukkit.broadcastMessage(ChatColor.GOLD + player.getDisplayName() + ChatColor.GREEN + " has found the target block! " + ChatColor.AQUA + "(" + Material.matchMaterial(targetBlock) + ")");
                 Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0F, 1.0F);
-                player.sendTitle(ChatColor.GOLD + player.getDisplayName() + ChatColor.GREEN + " has found the target block!", ChatColor.RED + "Please Wait for the host.", 10, 20, 10);
+                player.sendTitle(ChatColor.GOLD + winner.getDisplayName() + ChatColor.GREEN + " has found the target block!", ChatColor.RED + "Please Wait for the host.", 10, 20, 10);
                 player.setGameMode(GameMode.SPECTATOR);
                 event.getPlayer().setGameMode(GameMode.ADVENTURE);
                 event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 60, 255));
                 player.getInventory().clear();
                 new BukkitRunnable() {
                     public void run() {
-                        Location loc = new Location(Bukkit.getWorld("world"), -0 ,76, 0, 0, 0);
+                        Location loc = new Location(Bukkit.getWorld("world"), 0 ,76, 0, 0, 0);
                         player.teleport(loc);
                         for (PotionEffect effect : player.getActivePotionEffects()) {
                             player.removePotionEffect(effect.getType());
@@ -652,9 +812,9 @@ public class Main extends JavaPlugin implements Listener {
                 World world = Bukkit.getWorld("world");
                 if (((Player) event.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName().contains(ChatColor.GOLD + "" + ChatColor.BOLD + "Stick of Ban")) {
                     if (event.getDamager().isOp()) {
+                        world.spawnEntity(player.getLocation(), EntityType.LIGHTNING);
                         Bukkit.getBanList(BanList.Type.NAME).addBan(player.getName(), ChatColor.RED + "You were given a third degree burn by " + ChatColor.GOLD + "The Stick of Ban" + ChatColor.RED + ".", null, null);
                         player.kickPlayer(ChatColor.RED + "You were given a third degree burn by " + ChatColor.GOLD + "The Stick of Ban" + ChatColor.RED + ".");
-                        world.spawnEntity(player.getLocation(), EntityType.LIGHTNING);
                     } else {
                         Bukkit.getServer().getWorlds().get(0).playSound(player.getLocation(), Sound.ENTITY_EVOKER_CAST_SPELL, 1.0F, 1.0F);
                         event.getDamager().sendMessage(ChatColor.RED + "how tf did you get this");
@@ -677,9 +837,12 @@ public class Main extends JavaPlugin implements Listener {
         try {
             Player player = (Player) event.getEntity();
             if (player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().contains(ChatColor.BLUE + "" + ChatColor.BOLD + "Moving Pearls") || player.getInventory().getItemInOffHand().getItemMeta().getDisplayName().contains(ChatColor.BLUE + "" + ChatColor.BOLD + "Moving Pearls")) {
+                PotionEffect effect = player.getPotionEffect(PotionEffectType.SLOW);
+                if (effect != null && effect.getAmplifier() == 140 ) {
                     if (event.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
                         event.setCancelled(true);
                     }
+                }
             }
         } catch (ClassCastException | NullPointerException e) {
         }
@@ -688,7 +851,6 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void extraPainMode (EntityDamageEvent event) {
         try {
-            Player player = (Player) event.getEntity();
             if (config.getBoolean("extra-pain-mode")) {
                 if (!(event.getEntity() instanceof Player))
                     return;
@@ -701,7 +863,33 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
-        public void executeFireworkBarrage() {
+    @EventHandler
+    public void onPlayerMove (PlayerMoveEvent event) {
+        try {
+            Player player = (Player) event.getPlayer();
+            if (player.getInventory().getBoots().getItemMeta().getDisplayName().equals(ChatColor.GOLD + "" + ChatColor.BOLD + "Ankle Monitor")) {
+                PotionEffect effect = player.getPotionEffect(PotionEffectType.SLOW);
+                if (effect != null && effect.getAmplifier() == 1) {
+                    return;
+                }
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 1000000, 1));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000, 0));
+            }
+        } catch (ClassCastException | NullPointerException e) {
+        }
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event) {
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+        Player player = (Player) event.getEntity();
+        if (event.getDeathMessage().contains("drowned")) {
+            event.setDeathMessage(player.getDisplayName() + " failed to press spacebar while in water");
+        }
+    }
+    public void executeFireworkBarrage() {
         new BukkitRunnable() {
             public void run() {
                 World world = Bukkit.getWorld("world");
@@ -761,7 +949,52 @@ public class Main extends JavaPlugin implements Listener {
         return pearl;
     }
 
+    public ItemStack AnkleMonitor() {
 
+
+        ItemStack boots = new ItemStack(Material.GOLDEN_BOOTS);
+        ItemMeta meta = (ItemMeta) boots.getItemMeta();
+        boots.setItemMeta(meta);
+        meta.setDisplayName(ChatColor.GOLD +  "" + ChatColor.BOLD + "Ankle Monitor");
+        List<String> lore = new ArrayList<String>();
+        lore.add(ChatColor.BOLD + "");
+        lore.add(ChatColor.RED + "🧂 Permanent Slowness 2 while Wearing.");
+        lore.add(ChatColor.GREEN + "🍙 Permanent Resistance 1 while Wearing.");
+        meta.setLore(lore);
+        meta.addEnchant(Enchantment.VANISHING_CURSE, 32767, true);
+        meta.addEnchant(Enchantment.BINDING_CURSE, 32767, true);
+        meta.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 10, true);
+        meta.addEnchant(Enchantment.DURABILITY, 10, true);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+        boots.setItemMeta(meta);
+
+        return boots;
+    }
+
+    public ItemStack FakeElytra() {
+
+
+        ItemStack elytra = new ItemStack(Material.ELYTRA);
+        ItemMeta meta = (ItemMeta) elytra.getItemMeta();
+        elytra.setItemMeta(meta);
+        meta.setDisplayName(ChatColor.BLUE +"Free Elytra");
+        List<String> lore = new ArrayList<String>();
+        lore.add(ChatColor.BOLD + "");
+        lore.add(ChatColor.GOLD + "fly machine 2000");
+        meta.setLore(lore);
+        meta.addEnchant(Enchantment.VANISHING_CURSE, 32767, true);
+        meta.addEnchant(Enchantment.BINDING_CURSE, 32767, true);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+        elytra.setItemMeta(meta);
+
+        return elytra;
+    }
 
 
 }
+// 999 lines
+// 1000 lines
