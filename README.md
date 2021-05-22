@@ -1,4 +1,4 @@
-# Blockly
+# introduction here
 Reliable target block event plugin <br />
 ok <br />
 hippo <br />
@@ -9,3 +9,5 @@ if you have any questions... good fucking luck.
 # things i want to adress
 OMG!!!!!11!! Y U NO PUT PLUGIN IN MORE TAHN 1 CLASS1!!!11 <br />
 it was originally going to be in multiple files but half way into the project i thought it'd be more efficient to slap it into 1 file. and it was! If you hate me you hate me.
+# issues
+When updating scoreboard regardless of wether or not the config file's value is enabled it dsplays "OFF" until it is refreshed.
