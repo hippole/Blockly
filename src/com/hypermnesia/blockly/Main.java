@@ -4,6 +4,7 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.minecraft.server.v1_16_R3.CommandDeop;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
@@ -533,7 +534,8 @@ public class Main extends JavaPlugin implements Listener {
                             public void run() {
                                 if (this.time == 0) {
                                     for (Player player : Bukkit.getOnlinePlayers()) {
-                                        while (dodoBiomes.contains(Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1)
+                                        player.getActivePotionEffects().clear();
+                                            while (dodoBiomes.contains(Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1)
                                                 .getBiome(eventStartLoc.getBlockX(), eventStartLoc.getBlockY(), eventStartLoc.getBlockZ()))) {
                                             randomX = randomWithRange(1000, 2500);
                                             randomZ = randomWithRange(1000, 2500);
@@ -828,29 +830,15 @@ public class Main extends JavaPlugin implements Listener {
                             Score score1 = objective.getScore(ChatColor.DARK_GRAY + "Made by hippo (Hypermnesia).");
                             Score score2 = objective.getScore(ChatColor.DARK_GRAY + "Server: " + player.getPlayer().getWorld().getName());
                             Score score3 = objective.getScore("");
-                            if (blockLimitEnabled) {
-                                Score score4 = objective.getScore(ChatColor.GREEN + "Block Limit: " + ChatColor.GOLD + otherBlockLimit);
-                                score4.setScore(4);
-                            }
-                            if (!blockLimitEnabled) {
-                                Score score4 = objective.getScore(ChatColor.GREEN + "Block Limit: " + ChatColor.GOLD + "OFF");
-                                score4.setScore(4);
-                            }
-                            if (extraPainMode) {
-                                Score score5 = objective.getScore(ChatColor.GREEN + "Extra Pain Modifier: " + ChatColor.GOLD + extraPainValue + "x");
-                                score5.setScore(5);
-                            }
-                            if (!extraPainMode) {
-                                Score score5 = objective.getScore(ChatColor.GREEN + "Extra Pain Modifier: " + ChatColor.GOLD + "OFF");
-                                score5.setScore(5);
-                             }
+                            Score score4 = objective.getScore(ChatColor.GREEN + "Block Limit: " + ChatColor.GOLD + otherBlockLimit);
+                            Score score5 = objective.getScore(ChatColor.GREEN + "Extra Pain Modifier: " + ChatColor.GOLD + extraPainValue + "x");
                             Score score6 = objective.getScore(ChatColor.AQUA + "Participants: " + ChatColor.GOLD + Bukkit.getOnlinePlayers().size());
                             Score score7 = objective.getScore(ChatColor.YELLOW + "⚠ " + ChatColor.RED + "Nether & End Disabled" + ChatColor.YELLOW + " ⚠");
                             score1.setScore(1);
                             score2.setScore(2);
                             score3.setScore(3);
-                            //score4.setScore(4);
-                            //score5.setScore(5);
+                            score4.setScore(4);
+                            score5.setScore(5);
                             score6.setScore(6);
                             score7.setScore(7);
                             player.sendMessage(ChatColor.GREEN + "Scoreboard Refreshed!");
@@ -937,6 +925,9 @@ public class Main extends JavaPlugin implements Listener {
                             return true;
                         }
                         player.sendMessage(ChatColor.RED + "Boom, World " + args[0].toLowerCase() + " was yeeted. ");
+                        if (args[0].equalsIgnoreCase("lobby")) {
+                            player.sendMessage(ChatColor.RED + "NO");
+                        }
                         yeetWorld(Bukkit.getWorld(args[0]));
                     }
                 } catch (NullPointerException e) {
@@ -1122,29 +1113,15 @@ public class Main extends JavaPlugin implements Listener {
         Score score1 = objective.getScore(ChatColor.DARK_GRAY + "Made by hippo (Hypermnesia).");
         Score score2 = objective.getScore(ChatColor.DARK_GRAY + "Server: " + event.getPlayer().getWorld().getName());
         Score score3 = objective.getScore("");
-        if (blockLimitEnabled) {
-            Score score4 = objective.getScore(ChatColor.GREEN + "Block Limit: " + ChatColor.GOLD + otherBlockLimit);
-            score4.setScore(4);
-        }
-        if (!blockLimitEnabled) {
-            Score score4 = objective.getScore(ChatColor.GREEN + "Block Limit: " + ChatColor.GOLD + "OFF");
-            score4.setScore(4);
-        }
-        if (extraPainMode) {
-            Score score5 = objective.getScore(ChatColor.GREEN + "Extra Pain Modifier: " + ChatColor.GOLD + extraPainValue + "x");
-            score5.setScore(5);
-        }
-        if (!extraPainMode) {
-            Score score5 = objective.getScore(ChatColor.GREEN + "Extra Pain Modifier: " + ChatColor.GOLD + "OFF");
-            score5.setScore(5);
-        }
+        Score score4 = objective.getScore(ChatColor.GREEN + "Block Limit: " + ChatColor.GOLD + otherBlockLimit);
+        Score score5 = objective.getScore(ChatColor.GREEN + "Extra Pain Modifier: " + ChatColor.GOLD + extraPainValue + "x");
         Score score6 = objective.getScore(ChatColor.AQUA + "Participants: " + ChatColor.GOLD + Bukkit.getOnlinePlayers().size());
         Score score7 = objective.getScore(ChatColor.YELLOW + "⚠ " + ChatColor.RED + "Nether & End Disabled" + ChatColor.YELLOW + " ⚠");
         score1.setScore(1);
         score2.setScore(2);
         score3.setScore(3);
-        //score4.setScore(4);
-        //score5.setScore(5);
+        score4.setScore(4);
+        score5.setScore(5);
         score6.setScore(6);
         score7.setScore(7);
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -1162,31 +1139,17 @@ public class Main extends JavaPlugin implements Listener {
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         objective.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "⛏ Blockly ⛏");
         Score score1 = objective.getScore(ChatColor.DARK_GRAY + "Made by hippo (Hypermnesia).");
-        Score score2 = objective.getScore(ChatColor.DARK_GRAY + "Server: " + event.getPlayer().getWorld().getName());
+        Score score2 = objective.getScore(ChatColor.DARK_GRAY + "Server: " + event.getPlayer().getPlayer().getWorld().getName());
         Score score3 = objective.getScore("");
-        if (blockLimitEnabled) {
-            Score score4 = objective.getScore(ChatColor.GREEN + "Block Limit: " + ChatColor.GOLD + otherBlockLimit);
-            score4.setScore(4);
-        }
-        if (!blockLimitEnabled) {
-            Score score4 = objective.getScore(ChatColor.GREEN + "Block Limit: " + ChatColor.GOLD + "OFF");
-            score4.setScore(4);
-        }
-        if (extraPainMode) {
-            Score score5 = objective.getScore(ChatColor.GREEN + "Extra Pain Modifier: " + ChatColor.GOLD + extraPainValue + "x");
-            score5.setScore(5);
-        }
-        if (!extraPainMode) {
-            Score score5 = objective.getScore(ChatColor.GREEN + "Extra Pain Modifier: " + ChatColor.GOLD + "OFF");
-            score5.setScore(5);
-        }
+        Score score4 = objective.getScore(ChatColor.GREEN + "Block Limit: " + ChatColor.GOLD + otherBlockLimit);
+        Score score5 = objective.getScore(ChatColor.GREEN + "Extra Pain Modifier: " + ChatColor.GOLD + extraPainValue + "x");
         Score score6 = objective.getScore(ChatColor.AQUA + "Participants: " + ChatColor.GOLD + Bukkit.getOnlinePlayers().size());
         Score score7 = objective.getScore(ChatColor.YELLOW + "⚠ " + ChatColor.RED + "Nether & End Disabled" + ChatColor.YELLOW + " ⚠");
         score1.setScore(1);
         score2.setScore(2);
         score3.setScore(3);
-        //score4.setScore(4);
-        //score5.setScore(5);
+        score4.setScore(4);
+        score5.setScore(5);
         score6.setScore(6);
         score7.setScore(7);
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -1223,11 +1186,11 @@ public class Main extends JavaPlugin implements Listener {
                 }
             }.runTaskLater(this, 100);
             Bukkit.unloadWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), false);
-            yeetWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1));
             createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
         }
 
-}
+    }
+
     public void playerWinBlockLimit (BlockBreakEvent event) {
         Player winner = event.getPlayer();
         int otherBlockLimit = blockLimit + 1;
@@ -1244,7 +1207,6 @@ public class Main extends JavaPlugin implements Listener {
                 }
             }.runTaskLater(this, 100);
             Bukkit.unloadWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), false);
-            yeetWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1));
             createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
         }
 
