@@ -4,7 +4,10 @@ BOOM WOOSH KAPLAW INTOR EOEOEOEOEOW+E
 ok <br />
 hippo <br />
 oh yea this project is licensed under the MIT license <br />
-oh yea i spent 2 weeks on this project
+oh yea i spent a month on this project
+## dependencies
+spigot 1.16.5
+JSON-java
 # if you wanna install for yourself
 just like download this and compile it. <br />
 if you have any questions... good fucking luck. <br />
