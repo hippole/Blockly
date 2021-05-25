@@ -6,7 +6,7 @@ hippo <br />
 oh yea this project is licensed under the MIT license <br />
 oh yea i spent a month on this project
 ## dependencies
-spigot 1.16.5
+spigot 1.16.5 <br />
 JSON-java
 # if you wanna install for yourself
 just like download this and compile it. <br />
