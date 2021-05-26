@@ -24,3 +24,4 @@ idk fix it urself
 ## When updating scoreboard regardless of wether or not the config file's value is enabled it dsplays "OFF" until it is refreshed with /blockly.
 - just kidding! i removed it.
 ## plugin needs to be reloaded to work.
+- fixed
