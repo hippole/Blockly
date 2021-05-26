@@ -1,6 +1,8 @@
 # introduction here
 BOOM WOOSH KAPLAW INTOR EOEOEOEOEOW+E
 [patreon-badge]: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.herokuapp.com%2FZerebos&style=flat-square
+[patreon-link]: https://patreon.com/Zerebos
+
 ## Reliable target block event plugin <br />
 ok <br />
 hippo <br />
