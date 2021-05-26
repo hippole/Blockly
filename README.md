@@ -15,8 +15,10 @@ if you're too stupid heres a direct [link](https://github.com/Hypermnesiaa/Block
 # things i want to adress
 ## OMG!!!!!11!! Y U NO PUT PLUGIN IN MORE TAHN 1 CLASS1!!!11 <br />
 it was originally going to be in multiple files but half way into the project i thought it'd be more efficient to slap it into 1 file. and it was! If you hate me you hate me. <br />
-## can this code be condensed? <br />
+## can this code be condensed? 
 holy shit yes i had some pretty inefficient code in there
+## bro why commands so inconsistant
+idk fix it urself 
 # issues
 ## When updating scoreboard regardless of wether or not the config file's value is enabled it dsplays "OFF" until it is refreshed with /blockly.
 - just kidding! i removed it.
