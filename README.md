@@ -19,6 +19,6 @@ it was originally going to be in multiple files but half way into the project i 
 ## can this code be condensed? <br />
 holy shit yes i had some pretty inefficient code in there
 # issues
-##When updating scoreboard regardless of wether or not the config file's value is enabled it dsplays "OFF" until it is refreshed with /blockly.
+## When updating scoreboard regardless of wether or not the config file's value is enabled it dsplays "OFF" until it is refreshed with /blockly.
 - just kidding! i removed it.
-##plugin needs to be reloaded to work.
+## plugin needs to be reloaded to work.
