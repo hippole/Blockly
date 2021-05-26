@@ -1,5 +1,6 @@
 # introduction here
 BOOM WOOSH KAPLAW INTOR EOEOEOEOEOW+E
+[rick-roll]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 ## Reliable target block event plugin <br />
 ok <br />
 hippo <br />
