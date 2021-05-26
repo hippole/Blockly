@@ -1,4 +1,4 @@
-# introduction here
+# introduction here [![Build Status][travis-badge]][travis-link] [![Language Grade][lgtm-badge]][lgtm-link] ![GitHub Releases][downloads-badge] 
 BOOM WOOSH KAPLAW INTOR EOEOEOEOEOW+E
 ## Reliable target block event plugin <br />
 ok <br />
