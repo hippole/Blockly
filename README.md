@@ -1,6 +1,6 @@
 # introduction here
 BOOM WOOSH KAPLAW INTOR EOEOEOEOEOW+E
-[paypal-link]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+[patreon-badge]: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.herokuapp.com%2FZerebos&style=flat-square
 ## Reliable target block event plugin <br />
 ok <br />
 hippo <br />
