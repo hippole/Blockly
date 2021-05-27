@@ -4,30 +4,30 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.server.v1_16_R3.MinecraftServer;
-import net.minecraft.server.v1_16_R3.WorldServer;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
-import org.bukkit.craftbukkit.v1_16_R3.CraftServer;
-import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
@@ -63,6 +63,9 @@ public class Main extends JavaPlugin implements Listener {
     private Location eventStartLoc;
     private List<Biome> dodoBiomes = new ArrayList<Biome>();
     private Map<String, Integer> lb = new TreeMap();
+    private Inventory Inv;
+    private ConsoleCommandSender console = getServer().getConsoleSender();
+
 
 
     private int randomWithRange(int min, int max) {
@@ -181,7 +184,7 @@ public class Main extends JavaPlugin implements Listener {
                     }
                 }
             }
-            Bukkit.broadcastMessage(ChatColor.DARK_RED + "Silverfish: " + ChatColor.RED + "Spawns 10 silverfish at your feet..");
+            Bukkit.broadcastMessage(ChatColor.DARK_RED + "Silverfish: " + ChatColor.RED + "Spawns 10 silverfish at your feet.");
 
         }
         if (scenario.equalsIgnoreCase("instantdamage")) {
@@ -439,45 +442,49 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        System.out.println("[Blockly] server here again :D");
-        config.addDefault("extra-pain-mode", false);
-        config.addDefault("extra-pain-value", 1);
-        config.addDefault("block-limit-enabled", false);
-        config.addDefault("block-limit", 0);
-        config.addDefault("op-bypass-scenario", true);
-        config.options().copyDefaults(true);
-        config.options().header("These are the default values.\n" +
-                "These values can be temporarily changed at any time with the /blockly <setting> <value> command in game.\n" +
-                "Temporary values are reset to the defaults in this file once the server is reloaded/restarted." +
-                "Note: When setting the 'block-limit' variable set the variable to 1 higher than what you want. ex: 0 = 1, 1 = 2");
-        saveConfig();
-        eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
-        WorldCreator wc = new WorldCreator("lobby");
-        wc.environment(World.Environment.NORMAL);
-        wc.type(WorldType.FLAT);
-        wc.createWorld();
-        this.getServer().getPluginManager().registerEvents(this, this);
-        this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-        updateScoreboard();
-        Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-            public void run() {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    String message = ChatColor.GOLD + "Current target block: " + ChatColor.GREEN + Material.matchMaterial(targetBlock);
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+        try {
+            System.out.println("[Blockly] server here again :D");
+            config.addDefault("extra-pain-mode", false);
+            config.addDefault("extra-pain-value", 1);
+            config.addDefault("block-limit-enabled", false);
+            config.addDefault("block-limit", 0);
+            config.addDefault("op-bypass-scenario", true);
+            config.options().copyDefaults(true);
+            config.options().header("These are the default values.\n" +
+                    "These values can be temporarily changed at any time with the /blockly <setting> <value> command in game.\n" +
+                    "Temporary values are reset to the defaults in this file once the server is reloaded/restarted." +
+                    "Note: When setting the 'block-limit' variable set the variable to 1 higher than what you want. ex: 0 = 1, 1 = 2");
+            saveConfig();
+            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
+            WorldCreator wc = new WorldCreator("lobby");
+            wc.environment(World.Environment.NORMAL);
+            wc.type(WorldType.FLAT);
+            wc.createWorld();
+            this.getServer().getPluginManager().registerEvents(this, this);
+            this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+            updateScoreboard();
+            Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                public void run() {
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        String message = ChatColor.GOLD + "Current target block: " + ChatColor.GREEN + Material.matchMaterial(targetBlock);
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+                    }
                 }
-            }
-        }, 20, 20);
-        Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-            public void run() {
-                if (extraPainMode) {
-                    Bukkit.getServer().broadcastMessage(ChatColor.RED + "Friendly Reminder that " + ChatColor.DARK_RED + "Extra Pain Mode " + ChatColor.RED + "is currently active. ");
-                    Bukkit.getServer().broadcastMessage(ChatColor.DARK_RED + "Extra Pain Mode: Take " + extraPainValue + " times as much damage whenever you are damaged.");
-                } else {
-                    return;
-                }
+            }, 20, 20);
+            Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                public void run() {
+                    if (extraPainMode) {
+                        Bukkit.getServer().broadcastMessage(ChatColor.RED + "Friendly Reminder that " + ChatColor.DARK_RED + "Extra Pain Mode " + ChatColor.RED + "is currently active. ");
+                        Bukkit.getServer().broadcastMessage(ChatColor.DARK_RED + "Extra Pain Mode: Take " + extraPainValue + " times as much damage whenever you are damaged.");
+                    } else {
+                        return;
+                    }
 
-            }
-        }, 6000, 6000);
+                }
+            }, 6000, 6000);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("[Blockly] No idea why but you need to reload the server to have the plugin work.");
+        }
     }
 
 
@@ -546,7 +553,7 @@ public class Main extends JavaPlugin implements Listener {
                                         }
                                         player.teleport(eventStartLoc);
                                         Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1).playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0F, 1.0F);
-                                        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 600, 2));
+                                        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 1200, 2));
                                         player.setHealth(20);
                                         player.setSaturation(20);
                                         player.setFoodLevel(20);
@@ -668,6 +675,7 @@ public class Main extends JavaPlugin implements Listener {
                             playerEnd.setGameMode(GameMode.ADVENTURE);
                             createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
                             Bukkit.unloadWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), false);
+                            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
                         }
                         Bukkit.broadcastMessage(ChatColor.LIGHT_PURPLE + "Challenge Ended, Host ended challenge prematurely.");
                         return true;
@@ -690,8 +698,10 @@ public class Main extends JavaPlugin implements Listener {
                             if (playerOP.isOp()) {
                                 if (args[0].equalsIgnoreCase("tnt") || args[0].equalsIgnoreCase("blindness") || args[0].equalsIgnoreCase("hunger") || args[0].equalsIgnoreCase("wither") || args[0].equalsIgnoreCase("miningfatigue") || args[0].equalsIgnoreCase("clearinv") || args[0].equalsIgnoreCase("roulette") || args[0].equalsIgnoreCase("silverfish") || args[0].equalsIgnoreCase("instantdamage") || args[0].equalsIgnoreCase("typingtest")
                                         || args[0].equalsIgnoreCase("gapple") || args[0].equalsIgnoreCase("maniacminer") || args[0].equalsIgnoreCase("efficiency") || args[0].equalsIgnoreCase("fireres") || args[0].equalsIgnoreCase("invincibility") || args[0].equalsIgnoreCase("dog") || args[0].equalsIgnoreCase("nomoving") || args[0].equalsIgnoreCase("fakefly") || args[0].equalsIgnoreCase("anklemonitor")) {
+                                    console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (" + args[0].toLowerCase() + ")");
                                     playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (" + args[0].toLowerCase() + ")");
                                 } else {
+                                    console.sendMessage(ChatColor.RED + player.getName() + " attempted to execute a scenario but failed. Try checking the spelling.");
                                     playerOP.sendMessage(ChatColor.RED + player.getName() + " attempted to execute a scenario but failed. Try checking the spelling.");
                                 }
                             }
@@ -705,29 +715,7 @@ public class Main extends JavaPlugin implements Listener {
                     }
                 } catch (ArrayIndexOutOfBoundsException e) {
                     Player player = (Player) sender;
-                    player.sendMessage(ChatColor.RED + "Usage: /executescenario <scenario>");
-                }
-            }
-            if (label.equalsIgnoreCase("stickofban") || label.equalsIgnoreCase("sob")) {
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
-                    return true;
-                }
-                Player player = (Player) sender;
-                if (player.hasPermission("stickofban.use")) {
-                    if (player.getInventory().firstEmpty() == -1) {
-                        World world = Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1);
-                        world.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_HURT, 1.0F, 1.0F);
-                        player.sendMessage(ChatColor.RED + "Inventory Full! Free up some space and do the command again.");
-                        return false;
-                    }
-                    player.getInventory().addItem(StickOfBan());
-                    World world = Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1);
-                    world.playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1.0F, 1.0F);
-                    player.sendMessage(ChatColor.GOLD + "Be careful with that stick! It's real" + ChatColor.RED + " dangerous");
-                    return true;
-                } else {
-                    player.sendMessage(ChatColor.RED + "Insufficient Permission.");
+                    createInv();  player.openInventory(Inv);
                 }
             }
             if (label.equalsIgnoreCase("hippospeak") || label.equalsIgnoreCase("hs")) {
@@ -761,32 +749,6 @@ public class Main extends JavaPlugin implements Listener {
                     }
                 } else {
                     player.sendMessage(ChatColor.RED + "You are not hippo >:O");
-                }
-            }
-            if (label.equalsIgnoreCase("targetblock") || label.equalsIgnoreCase("tb")) {
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
-                    return true;
-                }
-                Player player = (Player) sender;
-                if (player.hasPermission("targetblock.use")) {
-                    if (args.length == 0) {
-                        player.sendMessage(ChatColor.RED + "Usage: /targetblock <block>");
-                        return true;
-                    }
-                    if (Material.matchMaterial(args[0]) == null) {
-                        player.sendMessage(ChatColor.RED + "Unknown material. Material returned null.");
-                        return true;
-                    }
-                    targetBlock = args[0];
-                    player.sendMessage(ChatColor.GREEN + "Successfully set the target block to " + ChatColor.GOLD + Material.matchMaterial(targetBlock));
-                    for (Player playerNotify : Bukkit.getOnlinePlayers()) {
-                        playerNotify.sendTitle(ChatColor.DARK_PURPLE + "Target Block Changed", ChatColor.LIGHT_PURPLE + "New target block is " + Material.matchMaterial(targetBlock), 10, 20, 10);
-                        Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1).playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0F, 1.0F);
-                    }
-
-                } else {
-                    player.sendMessage(ChatColor.RED + "Insufficient Permission.");
                 }
             }
             if (label.equalsIgnoreCase("warp")) {
@@ -828,7 +790,7 @@ public class Main extends JavaPlugin implements Listener {
                             player.sendMessage(ChatColor.GREEN + "Scoreboard refreshed!");
                         }
                         if (args[0].equalsIgnoreCase("list")) {
-                            player.sendMessage(ChatColor.GREEN + "List of all available values: \n blockLimit, extraPain, extraPainMode, blockLimitEnabled, healthDrain. \n" + ChatColor.RED + "Experimental values: \n opBypassScenario, createNewGameServer, getactivegameserver");
+                            player.sendMessage(ChatColor.GREEN + "List of all available values: \n blockLimit, extraPain, extraPainMode, blockLimitEnabled, healthDrain, targetBlock, give \n" + ChatColor.RED + "Experimental values: \n opBypassScenario, createNewGameServer, getActiveGameServer");
                         }
 
                         if (args[0].equalsIgnoreCase("blocklimit")) {
@@ -888,14 +850,92 @@ public class Main extends JavaPlugin implements Listener {
                             player.sendMessage(ChatColor.DARK_AQUA + "Creating new game server. Please allow up to a minute for the server to create.");
                             player.sendMessage(ChatColor.DARK_AQUA + "The server will lag.");
                             createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
+                            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
                         }
                         if (args[0].equalsIgnoreCase("getactivegameserver")) {
-                            player.sendMessage(ChatColor.DARK_PURPLE + "Current game server: " + Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1).getName());
+                            player.sendMessage(ChatColor.DARK_PURPLE + "Current game server: " + ChatColor.LIGHT_PURPLE + Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1).getName());
+                        }
+                        if (args[0].equalsIgnoreCase("targetblock") || args[0].equalsIgnoreCase("tb")) {
+                            if (player.hasPermission("targetblock.use")) {
+                                if (args.length == 0) {
+                                    player.sendMessage(ChatColor.RED + "Usage: /targetblock <block>");
+                                    return true;
+                                }
+                                if (Material.matchMaterial(args[1]) == null) {
+                                    player.sendMessage(ChatColor.RED + "Unknown material. Material returned null.");
+                                    return true;
+                                }
+                                targetBlock = args[1];
+                                player.sendMessage(ChatColor.GREEN + "Successfully set the target block to " + ChatColor.GOLD + Material.matchMaterial(targetBlock));
+                                for (Player playerNotify : Bukkit.getOnlinePlayers()) {
+                                    playerNotify.sendTitle(ChatColor.DARK_PURPLE + "Target Block Changed", ChatColor.LIGHT_PURPLE + "New target block is " + Material.matchMaterial(targetBlock), 10, 20, 10);
+                                    Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1).playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0F, 1.0F);
+                                }
+                            }
+                        }
+
+                        if (args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("g")) {
+                            if (player.hasPermission("blocklygive.use")) {
+                                if (args[1].equalsIgnoreCase("list")) {
+                                    player.sendMessage(ChatColor.GREEN + "List of available items: opBerry, stickOfBan");
+                                }
+                                if (args[1].equalsIgnoreCase("opberry")) {
+                                    try {
+                                        if (player.getInventory().firstEmpty() == -1) {
+                                            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_HURT, 1.0F, 1.0F);
+                                            player.sendMessage(ChatColor.RED + "Inventory Full! Free up some space and do the command again.");
+                                            return false;
+                                        }
+                                        for (int x = 0; x < Integer.parseInt(args[2]); x++) {
+                                            player.getInventory().addItem(Berry());
+                                        }
+                                        player.sendMessage(ChatColor.GREEN + "Successfully gave you " + Integer.parseInt(args[2]) + ChatColor.LIGHT_PURPLE + " " +
+                                                ChatColor.BOLD + "Overpowered Berry" + ChatColor.GREEN + "!");
+                                        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_SWEET_BERRY_BUSH, 1.0F, 1.0F);
+                                    } catch (ArrayIndexOutOfBoundsException e) {
+                                        player.sendMessage(ChatColor.GREEN + "Successfully gave you an" + ChatColor.LIGHT_PURPLE + " " +
+                                                ChatColor.BOLD + "Overpowered Berry" + ChatColor.GREEN + "!");
+                                        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_SWEET_BERRY_BUSH, 1.0F, 1.0F);
+                                        player.getInventory().addItem(Berry());
+                                        return true;
+                                    }
+                                }
+                                    if (args[1].equalsIgnoreCase("stickofban") || args[1].equalsIgnoreCase("sob")) {
+                                        try {
+                                        if (!(sender instanceof Player)) {
+                                            sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
+                                            return true;
+                                        }
+                                        if (player.getInventory().firstEmpty() == -1) {
+                                            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_HURT, 1.0F, 1.0F);
+                                            player.sendMessage(ChatColor.RED + "Inventory Full! Free up some space and do the command again.");
+                                            return false;
+                                        }
+                                            for (int x = 0; x < Integer.parseInt(args[2]); x++) {
+                                                player.getInventory().addItem(StickOfBan());
+                                            }
+                                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1.0F, 1.0F);
+                                            player.sendMessage(ChatColor.GREEN + "Successfully gave you " + Integer.parseInt(args[2]) + ChatColor.GOLD + " " +
+                                                    ChatColor.BOLD + "Stick of Ban" + ChatColor.GREEN + "!");
+                                            player.sendMessage(ChatColor.GOLD + "Be careful with that stick! It's real" + ChatColor.RED + " dangerous");
+                                        } catch (ArrayIndexOutOfBoundsException e) {
+                                            player.getInventory().addItem(StickOfBan());
+                                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1.0F, 1.0F);
+                                            player.sendMessage(ChatColor.GREEN + "Successfully gave you an " + ChatColor.GOLD + "" +
+                                                    ChatColor.BOLD + "Stick of Ban" + ChatColor.GREEN + "!");
+                                            player.sendMessage(ChatColor.GOLD + "Be careful with that stick! It's real" + ChatColor.RED + " dangerous");
+                                            return true;
+                                        }
+                                    }
+
+                            } else {
+                                player.sendMessage(ChatColor.RED + "Insufficient Permission.");
+                            }
                         }
 
 
 
-                    } else {
+                        } else {
                         player.sendMessage(ChatColor.RED + "Insufficient Permission.");
                     }
                 } catch (NumberFormatException e) {
@@ -1054,10 +1094,9 @@ public class Main extends JavaPlugin implements Listener {
         try {
             Player player = (Player) event.getEntity();
             if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
-                World world = Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1);
                 if (((Player) event.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName().contains(ChatColor.GOLD + "" + ChatColor.BOLD + "Stick of Ban")) {
                     if (event.getDamager().isOp()) {
-                        world.spawnEntity(player.getLocation(), EntityType.LIGHTNING);
+                        player.getWorld().spawnEntity(player.getLocation(), EntityType.LIGHTNING);
                         Bukkit.getBanList(BanList.Type.NAME).addBan(player.getName(), ChatColor.RED + "You were given a third degree burn by " + ChatColor.GOLD + "The Stick of Ban" + ChatColor.RED + ".", null, null);
                         player.kickPlayer(ChatColor.RED + "You were given a third degree burn by " + ChatColor.GOLD + "The Stick of Ban" + ChatColor.RED + ".");
                     } else {
@@ -1115,9 +1154,8 @@ public class Main extends JavaPlugin implements Listener {
             Player player = event.getPlayer();
             PotionEffect effectSlow = player.getPotionEffect(PotionEffectType.SLOW_FALLING);
             if (effectSlow != null && effectSlow.getAmplifier() == 2) {
-                if(event.getFrom().getY() < event.getTo().getY() &&
-                        player.getLocation().subtract(0, 1, 0).getBlock().getType() != Material.AIR) {
-                    event.getPlayer().getActivePotionEffects().clear();
+                if(event.getPlayer().isOnGround()) {
+                    event.getPlayer().removePotionEffect(PotionEffectType.SLOW_FALLING);
                 }
             }
             if (healthDrain) {
@@ -1174,7 +1212,7 @@ public class Main extends JavaPlugin implements Listener {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 600, 2));
+                    event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 1200, 2));
                 }
             }.runTaskLater(this, 10);
         }
@@ -1194,10 +1232,11 @@ public class Main extends JavaPlugin implements Listener {
             event.getPlayer().setGameMode(GameMode.ADVENTURE);
         } else {
             sendToServer(event.getPlayer(), Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1).getName());
+            event.getPlayer().teleport(eventStartLoc);
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 600, 2));
+                    event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 1200, 2));
                 }
             }.runTaskLater(this, 10);
         }
@@ -1210,11 +1249,10 @@ public class Main extends JavaPlugin implements Listener {
         if (event.getHarvestedBlock().getType().equals(Material.SWEET_BERRY_BUSH)) {
             int chance = this.randomWithRange(1,100);
             if (chance < 5) {
-                event.getPlayer().sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Lucky! " + ChatColor.YELLOW + "You found an " + ChatColor.RED + "" +
+                event.getPlayer().sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Lucky! " + ChatColor.YELLOW + "You found an " + ChatColor.LIGHT_PURPLE + "" +
                         ChatColor.BOLD + "Overpowered Berry" + ChatColor.YELLOW + "!");
-                World world = Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1);
-                world.dropItemNaturally(event.getPlayer().getLocation(),Berry());
-                world.playSound(event.getPlayer().getLocation(),Sound.ENTITY_VILLAGER_YES,1.0F,1.0F);
+                event.getPlayer().getWorld().dropItemNaturally(event.getPlayer().getLocation(),Berry());
+                event.getPlayer().getWorld().playSound(event.getPlayer().getLocation(),Sound.ENTITY_VILLAGER_YES,1.0F,1.0F);
             }
         }
     }
@@ -1222,19 +1260,19 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerEat (PlayerItemConsumeEvent event) {
         Player player = event.getPlayer();
-        World world = Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1);
         if (event.getItem().getType().equals(Material.SWEET_BERRIES)) {
-            if (event.getItem().getItemMeta().getDisplayName().equals(ChatColor.RED + "" + ChatColor.BOLD + "Overpowered Berry")) {
+            if (event.getItem().getItemMeta().getDisplayName().equals(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Overpowered Berry")) {
                     player.setHealth(20);
-                    player.setAbsorptionAmount(20);
+                    player.setAbsorptionAmount(6);
                     player.giveExpLevels(3);
                     player.setFoodLevel(20);
                     player.setSaturation(20);
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 200, 0));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 200, 2));
-                    player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Wowza! " + ChatColor.YELLOW + "You ate the " + ChatColor.RED + "" + ChatColor.BOLD + "Overpowered Berry" +
-                            ChatColor.YELLOW + "! Doing so granted you some crazy effects!");
-                    world.playSound(player.getLocation(),Sound.BLOCK_ANVIL_PLACE,1.0F,1.0F);
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 100, 0));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100, 2));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 1200, 0));
+                    player.sendMessage(ChatColor.GOLD + "" + ChatColor.BOLD + "Wowza! " + ChatColor.YELLOW + "You ate the " + ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Overpowered Berry" +
+                            ChatColor.YELLOW + "! Delicious!");
+                    player.getWorld().playSound(player.getLocation(),Sound.BLOCK_ANVIL_PLACE,1.0F,1.0F);
             }
             }
         }
@@ -1255,8 +1293,21 @@ public class Main extends JavaPlugin implements Listener {
             }.runTaskLater(this, 100);
             createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
             Bukkit.unloadWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), false);
+            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
         }
 
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (event.getBlock().getType() == Material.SWEET_BERRY_BUSH) {
+            ItemMeta itemMeta = player.getInventory().getItemInMainHand().getItemMeta();
+            if (itemMeta.getDisplayName().equals(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Overpowered Berry")) {
+                player.sendMessage(ChatColor.RED + "These berries are meant for consumption, not planting idiot.");
+                event.setCancelled(true);
+            }
+        }
     }
 
     public void playerWinBlockLimit (BlockBreakEvent event) {
@@ -1276,8 +1327,214 @@ public class Main extends JavaPlugin implements Listener {
             }.runTaskLater(this, 100);
             createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
             Bukkit.unloadWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), false);
+            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
         }
 
+    }
+
+
+    @EventHandler
+    public void onCLick(InventoryClickEvent event) {
+        if (!event.getView().getTitle().contains(ChatColor.RED + "Execute Scenario"))
+            return;
+        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem().getItemMeta() == null) return;
+        if (event.getCurrentItem().getItemMeta().getDisplayName() == null) return;
+
+        event.setCancelled(true);
+
+        Player player = (Player) event.getWhoClicked();
+        if (event.getSlot() == 1) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'TNT'");
+            this.executeScenario("tnt", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (tnt)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (tnt)");
+                }
+            }
+        }
+
+        if (event.getSlot() == 2) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Blindness'");
+            this.executeScenario("blindness", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (blindness)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (blindness)");
+                }
+            }
+        }
+        if (event.getSlot() == 3) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Hunger'");
+            this.executeScenario("hunger", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (hunger)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (hunger)");
+                }
+            }
+        }
+        if (event.getSlot() == 4) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Wither'");
+            this.executeScenario("wither", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (wither)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (wither)");
+                }
+            }
+        }
+        if (event.getSlot() == 5) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Mining Fatigue'");
+            this.executeScenario("miningfatigue", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (miningfatigue)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (miningfatigue)");
+                }
+            }
+        }
+        if (event.getSlot() == 6) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Clear Inventory'");
+            this.executeScenario("clearinv", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (clearinv)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (clearinv)");
+                }
+            }
+        }
+        if (event.getSlot() == 7) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Roulette'");
+            this.executeScenario("roulette", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (roulette)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (roulette)");
+                }
+            }
+        }
+        if (event.getSlot() == 8) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Silverfish'");
+            this.executeScenario("silverfish", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (silverfish)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (silverfish)");
+                }
+            }
+        }
+        if (event.getSlot() == 9) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Instant Damage'");
+            this.executeScenario("instantdamage", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (instantdamage)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (instantdamage)");
+                }
+            }
+        }
+        if (event.getSlot() == 10) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Typing Test'");
+            this.executeScenario("typingtest", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (typingtest)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (typingtest)");
+                }
+            }
+        }
+        if (event.getSlot() == 12) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Gapple'");
+            this.executeScenario("gapple", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (gapple)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (gapple)");
+                }
+            }
+        }
+        if (event.getSlot() == 13) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Maniac Miner'");
+            this.executeScenario("maniacminer", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (maniacminer)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (maniacminer)");
+                }
+            }
+        }
+        if (event.getSlot() == 14) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Efficiency'");
+            this.executeScenario("efficiency", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (efficiency)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (efficiency)");
+                }
+            }
+        }
+        if (event.getSlot() == 15) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Fire Resistance'");
+            this.executeScenario("fireres", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fireres)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fireres)");
+                }
+            }
+        }
+        if (event.getSlot() == 16) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Invincibility'");
+            this.executeScenario("invincibility", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (invincibility)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (invincibility)");
+                }
+            }
+        }
+        if (event.getSlot() == 18) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Dog'");
+            this.executeScenario("dog", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (dog)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (dog)");
+                }
+            }
+        }
+        if (event.getSlot() == 19) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'No Moving'");
+            this.executeScenario("nomoving", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (nomoving)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (nomoving)");
+                }
+            }
+        }
+        if (event.getSlot() == 20) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Fake Fly'");
+            this.executeScenario("fakefly", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fakefly)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fakefly)");
+                }
+            }
+        }
+        if (event.getSlot() == 21) {
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Ankle Monitor'");
+            this.executeScenario("anklemonitor", null);
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (anklemonitor)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (anklemonitor)");
+                }
+            }
+        }
     }
     /* public void executeFireworkBarrage() {
         new BukkitRunnable() {
@@ -1301,17 +1558,19 @@ public class Main extends JavaPlugin implements Listener {
         ItemStack berry = new ItemStack(Material.SWEET_BERRIES);
         ItemMeta meta = (ItemMeta) berry.getItemMeta();
         berry.setItemMeta(meta);
-        meta.setDisplayName(ChatColor.RED +  "" + ChatColor.BOLD + "Overpowered Berry");
+        meta.setDisplayName(ChatColor.LIGHT_PURPLE +  "" + ChatColor.BOLD + "Overpowered Berry");
         List<String> lore = new ArrayList<String>();
         lore.add(ChatColor.BOLD + "");
-        lore.add(ChatColor.GOLD + "Eat to gain the following effects:");
+        lore.add(ChatColor.GOLD + "" + ChatColor.UNDERLINE + "Eat to gain the following effects:");
+        lore.add(ChatColor.BOLD + "");
+        lore.add(ChatColor.DARK_RED + "Gain fire resistance for 1 minute.");
         lore.add(ChatColor.RED + "Instantly heal to max health.");
-        lore.add(ChatColor.YELLOW + "Gain 20 HP worth of a absorption.");
+        lore.add(ChatColor.YELLOW + "Gain 6 HP worth of a absorption.");
         lore.add(ChatColor.GREEN + "Gain three XP levels.");
-        lore.add(ChatColor.DARK_RED + "Gain strength I for 10 seconds.");
-        lore.add(ChatColor.WHITE + "Gain speed III for 10 seconds.");
         lore.add(ChatColor.DARK_AQUA + "Regain all hunger.");
-        lore.add(ChatColor.DARK_BLUE + "Regain all saturation.");
+        lore.add(ChatColor.BLUE + "Regain all saturation.");
+        lore.add(ChatColor.DARK_PURPLE + "Gain strength I for 5 seconds.");
+        lore.add(ChatColor.WHITE + "Gain speed III for 5 seconds.");
         meta.setLore(lore);
         meta.addEnchant(Enchantment.SILK_TOUCH, 32767, true);
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
@@ -1411,5 +1670,242 @@ public class Main extends JavaPlugin implements Listener {
         return elytra;
     }
 
+    public void createInv() {
+
+        Inv = Bukkit.createInventory(null, 27, ChatColor.RED + "Execute Scenario");
+
+        ItemStack nomore = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta nomoreItemMeta = nomore.getItemMeta();
+        nomoreItemMeta.setDisplayName(ChatColor.WHITE + "Nothing");
+        nomore.setItemMeta(nomoreItemMeta);
+        Inv.setItem(22, nomore);
+        Inv.setItem(23, nomore);
+        Inv.setItem(24, nomore);
+        Inv.setItem(25, nomore);
+        Inv.setItem(26, nomore);
+
+        ItemStack ankle = new ItemStack(Material.GOLDEN_BOOTS);
+        ItemMeta ankleItemMeta = ankle.getItemMeta();
+        ankleItemMeta.setDisplayName(ChatColor.DARK_BLUE + "Ankle Monitor");
+        List<String> ankleLore = new ArrayList<String>();
+        ankleLore.add(ChatColor.BLUE + "Sets everyone's boots to an Ankle Monitor which gives them permanent slowness 2 and resistance 1.");
+        ankleLore.add(ChatColor.BLUE + "which gives them permanent slowness 2 and resistance 1.");
+        ankleItemMeta.setLore(ankleLore);
+        ankleItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        ankle.setItemMeta(ankleItemMeta);
+        Inv.setItem(21, ankle);
+
+        ItemStack fake = new ItemStack(Material.ELYTRA);
+        ItemMeta fakeItemMeta = fake.getItemMeta();
+        fakeItemMeta.setDisplayName(ChatColor.DARK_BLUE + "Fake Fly");
+        List<String> fakeLore = new ArrayList<String>();
+        fakeLore.add(ChatColor.BLUE + "Teleports everyone to y=300 gives them an elytra and 5 rockets.");
+        fakeLore.add(ChatColor.BLUE + "However, the elytra gets removed after 10 seconds.");
+        fakeItemMeta.setLore(fakeLore);
+        fakeItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        fake.setItemMeta(fakeItemMeta);
+        Inv.setItem(20, fake);
+
+        ItemStack no = new ItemStack(Material.ENDER_PEARL);
+        ItemMeta noItemMeta = no.getItemMeta();
+        noItemMeta.setDisplayName(ChatColor.DARK_BLUE + "No Moving");
+        List<String> noLore = new ArrayList<String>();
+        noLore.add(ChatColor.BLUE + "Gives everyone 64 ender pearls but also removes their ability to walk/jump");
+        noItemMeta.setLore(noLore);
+        noItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        no.setItemMeta(noItemMeta);
+        Inv.setItem(19, no);
+
+        ItemStack dog = new ItemStack(Material.BONE);
+        ItemMeta dogItemMeta = dog.getItemMeta();
+        dogItemMeta.setDisplayName(ChatColor.DARK_BLUE + "Dog");
+        List<String> dogLore = new ArrayList<String>();
+        dogLore.add(ChatColor.BLUE + "Spawns a cute doggo on everyone.");
+        dogItemMeta.setLore(dogLore);
+        dogItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        dog.setItemMeta(dogItemMeta);
+        Inv.setItem(18, dog);
+
+        ItemStack special = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
+        ItemMeta specialMeta = special.getItemMeta();
+        specialMeta.setDisplayName(ChatColor.BLUE + "Special Scenarios");
+        specialMeta.addEnchant(Enchantment.SILK_TOUCH,1,true);
+        specialMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        special.setItemMeta(specialMeta);
+        Inv.setItem(17, special);
+
+        ItemStack invc = new ItemStack(Material.IRON_BLOCK);
+        ItemMeta invcItemMeta = invc.getItemMeta();
+        invcItemMeta.setDisplayName(ChatColor.DARK_GREEN + "Invincibility");
+        List<String> invcLore = new ArrayList<String>();
+        invcLore.add(ChatColor.GREEN + "Makes everyone immune to damage for a minute.");
+        invcItemMeta.setLore(invcLore);
+        invcItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        invc.setItemMeta(invcItemMeta);
+        Inv.setItem(16, invc);
+
+        ItemStack fire = new ItemStack(Material.LAVA_BUCKET);
+        ItemMeta fireItemMeta = fire.getItemMeta();
+        fireItemMeta.setDisplayName(ChatColor.DARK_GREEN + "Fire Resistance");
+        List<String> fireLore = new ArrayList<String>();
+        fireLore.add(ChatColor.GREEN + "Gives everyone fire resistance for a minute.");
+        fireItemMeta.setLore(fireLore);
+        fireItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        fire.setItemMeta(fireItemMeta);
+        Inv.setItem(15, fire);
+
+        ItemStack efficiency = new ItemStack(Material.IRON_PICKAXE);
+        ItemMeta efficiencyItemMeta = efficiency.getItemMeta();
+        efficiencyItemMeta.setDisplayName(ChatColor.DARK_GREEN + "Efficiency");
+        List<String> efficiencyLore = new ArrayList<String>();
+        efficiencyLore.add(ChatColor.GREEN + "Enchants everyone's current item in hand with efficiency 1.");
+        efficiencyItemMeta.setLore(efficiencyLore);
+        efficiencyItemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        efficiencyItemMeta.addEnchant(Enchantment.DIG_SPEED,1,true);
+        efficiency.setItemMeta(efficiencyItemMeta);
+        Inv.setItem(14, efficiency);
+
+        ItemStack maniac = new ItemStack(Material.GOLDEN_PICKAXE);
+        ItemMeta maniacItemMeta = maniac.getItemMeta();
+        maniacItemMeta.setDisplayName(ChatColor.DARK_GREEN + "Maniac Miner");
+        List<String> maniacLore = new ArrayList<String>();
+        maniacLore.add(ChatColor.GREEN + "Gives everyone haste 3 and speed 1 for a minute.");
+        maniacItemMeta.setLore(maniacLore);
+        maniacItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        maniac.setItemMeta(maniacItemMeta);
+        Inv.setItem(13, maniac);
+
+        ItemStack gap = new ItemStack(Material.GOLDEN_APPLE);
+        ItemMeta gapItemMeta = gap.getItemMeta();
+        gapItemMeta.setDisplayName(ChatColor.DARK_GREEN + "Gapple");
+        List<String> gapLore = new ArrayList<String>();
+        gapLore.add(ChatColor.GREEN + "Gives everyone the effects of a gapple.");
+        gapItemMeta.setLore(gapLore);
+        gapItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        gap.setItemMeta(gapItemMeta);
+        Inv.setItem(12, gap);
+
+        ItemStack good = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
+        ItemMeta goodMeta = good.getItemMeta();
+        goodMeta.setDisplayName(ChatColor.GREEN + "Good Scenarios");
+        goodMeta.addEnchant(Enchantment.SILK_TOUCH,1,true);
+        goodMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        good.setItemMeta(goodMeta);
+        Inv.setItem(11, good);
+
+        ItemStack typing = new ItemStack(Material.PAPER);
+        ItemMeta typingItemMeta = typing.getItemMeta();
+        typingItemMeta.setDisplayName(ChatColor.DARK_RED + "Typing Test");
+        List<String> typingLore = new ArrayList<String>();
+        typingLore.add(ChatColor.RED + "Gives everyone 10 seconds to type random phrase or they die.");
+        typingItemMeta.setLore(typingLore);
+        typingItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        typing.setItemMeta(typingItemMeta);
+        Inv.setItem(10, typing);
+
+        ItemStack damage = new ItemStack(Material.SPLASH_POTION);
+        ItemMeta damageItemMeta = damage.getItemMeta();
+        damageItemMeta.setDisplayName(ChatColor.DARK_RED + "Instant Damage");
+        List<String> damageLore = new ArrayList<String>();
+        damageLore.add(ChatColor.RED + "Gives everyone instant damage 2.");
+        damageItemMeta.setLore(damageLore);
+        damageItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        PotionMeta meta = ((PotionMeta) damageItemMeta);
+        meta.setColor(Color.BLACK);
+        meta.addCustomEffect(new PotionEffect(PotionEffectType.HARM, 0, 1), true);
+        damage.setItemMeta(meta);
+        Inv.setItem(9, damage);
+
+        ItemStack silverfish = new ItemStack(Material.SILVERFISH_SPAWN_EGG);
+        ItemMeta silverfishItemMeta = silverfish.getItemMeta();
+        silverfishItemMeta.setDisplayName(ChatColor.DARK_RED + "Silverfish");
+        List<String> silverfishLore = new ArrayList<String>();
+        silverfishLore.add(ChatColor.RED + "Summons 10 Silverfish on every player.");
+        silverfishItemMeta.setLore(silverfishLore);
+        silverfishItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        silverfish.setItemMeta(silverfishItemMeta);
+        Inv.setItem(8, silverfish);
+
+        ItemStack roulette = new ItemStack(Material.GOLD_INGOT);
+        ItemMeta rouletteItemMeta = roulette.getItemMeta();
+        rouletteItemMeta.setDisplayName(ChatColor.DARK_RED + "Roulette");
+        List<String> rouletteLore = new ArrayList<String>();
+        rouletteLore.add(ChatColor.RED + "Random player instantly dies.");
+        rouletteItemMeta.setLore(rouletteLore);
+        rouletteItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        roulette.setItemMeta(rouletteItemMeta);
+        Inv.setItem(7, roulette);
+
+        ItemStack clear = new ItemStack(Material.TRAPPED_CHEST);
+        ItemMeta clearItemMeta = clear.getItemMeta();
+        clearItemMeta.setDisplayName(ChatColor.DARK_RED + "Clear Inventory");
+        List<String> clearLore = new ArrayList<String>();
+        clearLore.add(ChatColor.RED + "Clears everyone's inventory.");
+        clearItemMeta.setLore(clearLore);
+        clearItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        clear.setItemMeta(clearItemMeta);
+        Inv.setItem(6, clear);
+
+        ItemStack mining = new ItemStack(Material.WOODEN_PICKAXE);
+        ItemMeta miningItemMeta = mining.getItemMeta();
+        miningItemMeta.setDisplayName(ChatColor.DARK_RED + "Mining Fatigue");
+        List<String> miningLore = new ArrayList<String>();
+        miningLore.add(ChatColor.RED + "Gives everyone mining fatigue for a minute.");
+        miningItemMeta.setLore(miningLore);
+        miningItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        mining.setItemMeta(miningItemMeta);
+        Inv.setItem(5, mining);
+
+        ItemStack wither = new ItemStack(Material.COAL);
+        ItemMeta witherItemMeta = wither.getItemMeta();
+        witherItemMeta.setDisplayName(ChatColor.DARK_RED + "Wither");
+        List<String> witherLore = new ArrayList<String>();
+        witherLore.add(ChatColor.RED + "Gives everyone wither 3 for 10 seconds.");
+        witherItemMeta.setLore(witherLore);
+        witherItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        wither.setItemMeta(witherItemMeta);
+        Inv.setItem(4, wither);
+
+        ItemStack hunger = new ItemStack(Material.ROTTEN_FLESH);
+        ItemMeta hungerItemMeta = hunger.getItemMeta();
+        hungerItemMeta.setDisplayName(ChatColor.DARK_RED + "Hunger");
+        List<String> hungerLore = new ArrayList<String>();
+        hungerLore.add(ChatColor.RED + "Gives everyone hunger 10 for a minute.");
+        hungerItemMeta.setLore(hungerLore);
+        hungerItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        hunger.setItemMeta(hungerItemMeta);
+        Inv.setItem(3, hunger);
+
+        ItemStack blind = new ItemStack(Material.POTION);
+        ItemMeta blindItemMeta = blind.getItemMeta();
+        blindItemMeta.setDisplayName(ChatColor.DARK_RED + "Blindness");
+        List<String> blindLore = new ArrayList<String>();
+        blindLore.add(ChatColor.RED + "Gives everyone blindness for a minute.");
+        blindItemMeta.setLore(blindLore);
+        blindItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        PotionMeta potionMeta = ((PotionMeta) blindItemMeta);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.BLINDNESS, 1200, 2), true);
+        potionMeta.setColor(Color.GRAY);
+        blind.setItemMeta(potionMeta);
+        Inv.setItem(2, blind);
+
+        ItemStack tnt = new ItemStack(Material.TNT);
+        ItemMeta tntItemMeta = tnt.getItemMeta();
+        tntItemMeta.setDisplayName(ChatColor.DARK_RED + "TNT");
+        List<String> tntLore = new ArrayList<String>();
+        tntLore.add(ChatColor.RED + "Summon tnt on all players.");
+        tntItemMeta.setLore(tntLore);
+        tntItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        tnt.setItemMeta(tntItemMeta);
+        Inv.setItem(1, tnt);
+
+        ItemStack bad = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+        ItemMeta badMeta = bad.getItemMeta();
+        badMeta.setDisplayName(ChatColor.RED + "Bad Scenarios");
+        badMeta.addEnchant(Enchantment.SILK_TOUCH,1,true);
+        badMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        bad.setItemMeta(badMeta);
+        Inv.setItem(0, bad);
+    }
 
 }
