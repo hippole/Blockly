@@ -13,9 +13,11 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -33,6 +35,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.*;
 import org.json.simple.JSONObject;
 
@@ -407,15 +410,13 @@ public class Main extends JavaPlugin implements Listener {
         }
         if (scenario.equalsIgnoreCase("anklemonitor")) {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (player.isOp()) {
                     if (player.isOp() && opBypassScenario) {
 
                     } else {
+                        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 1.0F, 1.0F);
+                        player.sendTitle(ChatColor.DARK_BLUE + "Ankle Monitor", ChatColor.BLUE + "No more snek for you.", 10, 20, 10);
+                        player.getInventory().setBoots(AnkleMonitor());
                     }
-                    player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 1.0F, 1.0F);
-                    player.sendTitle(ChatColor.DARK_BLUE + "Ankle Monitor", ChatColor.BLUE + "No more snek for you.", 10, 20, 10);
-                    player.getInventory().setBoots(AnkleMonitor());
-                }
             }
             Bukkit.broadcastMessage(ChatColor.DARK_BLUE + "Ankle Monitor: " + ChatColor.BLUE + "No more snek for you.");
             Bukkit.broadcastMessage(ChatColor.DARK_BLUE + "" + ChatColor.BOLD + "This is a special scenario! This can only be triggered via the host with a command.");
@@ -715,6 +716,7 @@ public class Main extends JavaPlugin implements Listener {
                     }
                 } catch (ArrayIndexOutOfBoundsException e) {
                     Player player = (Player) sender;
+                    player.getWorld().playSound(player.getLocation(),Sound.ITEM_BOOK_PAGE_TURN,1.0F,1.0F);
                     createInv();  player.openInventory(Inv);
                 }
             }
@@ -877,7 +879,7 @@ public class Main extends JavaPlugin implements Listener {
                         if (args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("g")) {
                             if (player.hasPermission("blocklygive.use")) {
                                 if (args[1].equalsIgnoreCase("list")) {
-                                    player.sendMessage(ChatColor.GREEN + "List of available items: opBerry, stickOfBan");
+                                    player.sendMessage(ChatColor.GREEN + "List of available items: opBerry, stickOfBan, fireballLauncher");
                                 }
                                 if (args[1].equalsIgnoreCase("opberry")) {
                                     try {
@@ -927,6 +929,32 @@ public class Main extends JavaPlugin implements Listener {
                                             return true;
                                         }
                                     }
+
+                                if (args[1].equalsIgnoreCase("fireballlauncher") || args[1].equalsIgnoreCase("fbl")) {
+                                    try {
+                                        if (!(sender instanceof Player)) {
+                                            sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
+                                            return true;
+                                        }
+                                        if (player.getInventory().firstEmpty() == -1) {
+                                            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_HURT, 1.0F, 1.0F);
+                                            player.sendMessage(ChatColor.RED + "Inventory Full! Free up some space and do the command again.");
+                                            return false;
+                                        }
+                                        for (int x = 0; x < Integer.parseInt(args[2]); x++) {
+                                            player.getInventory().addItem(FireballLauncher());
+                                        }
+                                        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0F, 1.0F);
+                                        player.sendMessage(ChatColor.GREEN + "Successfully gave you " + Integer.parseInt(args[2]) + ChatColor.RED + " " +
+                                                ChatColor.BOLD + "Fireball launcher" + ChatColor.GREEN + "!");
+                                    } catch (ArrayIndexOutOfBoundsException e) {
+                                        player.getInventory().addItem(FireballLauncher());
+                                        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0F, 1.0F);
+                                        player.sendMessage(ChatColor.GREEN + "Successfully gave you an " + ChatColor.RED + "" +
+                                                ChatColor.BOLD + "Fireball launcher" + ChatColor.GREEN + "!");
+                                        return true;
+                                    }
+                                }
 
                             } else {
                                 player.sendMessage(ChatColor.RED + "Insufficient Permission.");
@@ -1277,6 +1305,254 @@ public class Main extends JavaPlugin implements Listener {
             }
         }
 
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (event.getBlock().getType() == Material.SWEET_BERRY_BUSH) {
+            ItemMeta itemMeta = player.getInventory().getItemInMainHand().getItemMeta();
+            if (itemMeta.getDisplayName().equals(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Overpowered Berry")) {
+                player.sendMessage(ChatColor.RED + "These berries are meant for consumption, not planting idiot.");
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler()
+    public void onClick(PlayerInteractEvent event) {
+        if(event.getPlayer().getInventory().getItemInMainHand().getType().equals(Material.DIAMOND_SWORD))
+            if(event.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore()) {
+                Player player = event.getPlayer();
+                if (player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().contains(ChatColor.RED +  "" + ChatColor.BOLD + "Fireball Launcher"))
+                    if(event.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore()) {
+                        if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
+                            player.launchProjectile(Fireball.class);
+                            player.sendMessage(ChatColor.RED + "Launched Fireball!");
+                            player.getInventory().setItemInMainHand(FireballLauncherCooldown());
+                            BukkitTask bukkitTask = new BukkitRunnable() {
+                                public void run() {
+                                    Inventory inventory = player.getInventory();
+
+                                    for (ItemStack inv : inventory.getContents()) {
+
+                                        try {
+                                            if (inv.getItemMeta().getDisplayName().equals(FireballLauncherCooldown().getItemMeta().getDisplayName())) {
+                                                inv.setType(Material.DIAMOND_SWORD);
+                                                inv.setItemMeta(FireballLauncher().getItemMeta());
+                                            }
+                                        } catch (NullPointerException e) {
+
+                                        }
+                                    }                                }
+                            }.runTaskLater(this, 100);
+                        }
+                }
+            }
+    }
+
+    @EventHandler
+    public void onCLick(InventoryClickEvent event) {
+        if (!event.getView().getTitle().contains(ChatColor.RED + "Scenarios"))
+            return;
+        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem().getItemMeta() == null) return;
+        if (event.getCurrentItem().getItemMeta().getDisplayName() == null) return;
+
+        event.setCancelled(true);
+
+        Player player = (Player) event.getWhoClicked();
+        if (event.getSlot() == 1) {
+            this.executeScenario("tnt", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (tnt)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (tnt)");
+                }
+            }
+        }
+
+        if (event.getSlot() == 2) {
+            this.executeScenario("blindness", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (blindness)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (blindness)");
+                }
+            }
+        }
+        if (event.getSlot() == 3) {
+            this.executeScenario("hunger", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (hunger)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (hunger)");
+                }
+            }
+        }
+        if (event.getSlot() == 4) {
+            this.executeScenario("wither", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (wither)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (wither)");
+                }
+            }
+        }
+        if (event.getSlot() == 5) {
+            this.executeScenario("miningfatigue", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (miningfatigue)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (miningfatigue)");
+                }
+            }
+        }
+        if (event.getSlot() == 6) {
+            this.executeScenario("clearinv", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (clearinv)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (clearinv)");
+                }
+            }
+        }
+        if (event.getSlot() == 7) {
+            this.executeScenario("roulette", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (roulette)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (roulette)");
+                }
+            }
+        }
+        if (event.getSlot() == 8) {
+            this.executeScenario("silverfish", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (silverfish)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (silverfish)");
+                }
+            }
+        }
+        if (event.getSlot() == 10) {
+            this.executeScenario("instantdamage", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (instantdamage)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (instantdamage)");
+                }
+            }
+        }
+        if (event.getSlot() == 11) {
+            this.executeScenario("typingtest", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (typingtest)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (typingtest)");
+                }
+            }
+        }
+        if (event.getSlot() == 19) {
+            this.executeScenario("gapple", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (gapple)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (gapple)");
+                }
+            }
+        }
+        if (event.getSlot() == 20) {
+            this.executeScenario("maniacminer", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (maniacminer)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (maniacminer)");
+                }
+            }
+        }
+        if (event.getSlot() == 21) {
+            this.executeScenario("efficiency", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (efficiency)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (efficiency)");
+                }
+            }
+        }
+        if (event.getSlot() == 22) {
+            this.executeScenario("fireres", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fireres)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fireres)");
+                }
+            }
+        }
+        if (event.getSlot() == 23) {
+            this.executeScenario("invincibility", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (invincibility)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (invincibility)");
+                }
+            }
+        }
+        if (event.getSlot() == 28) {
+            this.executeScenario("dog", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (dog)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (dog)");
+                }
+            }
+        }
+        if (event.getSlot() == 29) {
+            this.executeScenario("nomoving", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (nomoving)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (nomoving)");
+                }
+            }
+        }
+        if (event.getSlot() == 30) {
+            this.executeScenario("fakefly", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fakefly)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fakefly)");
+                }
+            }
+        }
+        if (event.getSlot() == 31) {
+            this.executeScenario("anklemonitor", null);
+            player.closeInventory();
+            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (anklemonitor)");
+            for (Player playerOP : Bukkit.getOnlinePlayers()) {
+                if (playerOP.isOp()) {
+                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (anklemonitor)");
+                }
+            }
+        }
+    }
+
     public void playerWin (BlockBreakEvent event) {
         Player winner = event.getPlayer();
         Bukkit.broadcastMessage(ChatColor.GOLD + winner.getDisplayName() + ChatColor.GREEN + " has found the target block! " + ChatColor.AQUA + "(" + Material.matchMaterial(targetBlock) + ")");
@@ -1296,18 +1572,6 @@ public class Main extends JavaPlugin implements Listener {
             eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
         }
 
-    }
-
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
-        if (event.getBlock().getType() == Material.SWEET_BERRY_BUSH) {
-            ItemMeta itemMeta = player.getInventory().getItemInMainHand().getItemMeta();
-            if (itemMeta.getDisplayName().equals(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Overpowered Berry")) {
-                player.sendMessage(ChatColor.RED + "These berries are meant for consumption, not planting idiot.");
-                event.setCancelled(true);
-            }
-        }
     }
 
     public void playerWinBlockLimit (BlockBreakEvent event) {
@@ -1332,210 +1596,6 @@ public class Main extends JavaPlugin implements Listener {
 
     }
 
-
-    @EventHandler
-    public void onCLick(InventoryClickEvent event) {
-        if (!event.getView().getTitle().contains(ChatColor.RED + "Execute Scenario"))
-            return;
-        if (event.getCurrentItem() == null) return;
-        if (event.getCurrentItem().getItemMeta() == null) return;
-        if (event.getCurrentItem().getItemMeta().getDisplayName() == null) return;
-
-        event.setCancelled(true);
-
-        Player player = (Player) event.getWhoClicked();
-        if (event.getSlot() == 1) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'TNT'");
-            this.executeScenario("tnt", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (tnt)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (tnt)");
-                }
-            }
-        }
-
-        if (event.getSlot() == 2) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Blindness'");
-            this.executeScenario("blindness", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (blindness)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (blindness)");
-                }
-            }
-        }
-        if (event.getSlot() == 3) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Hunger'");
-            this.executeScenario("hunger", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (hunger)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (hunger)");
-                }
-            }
-        }
-        if (event.getSlot() == 4) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Wither'");
-            this.executeScenario("wither", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (wither)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (wither)");
-                }
-            }
-        }
-        if (event.getSlot() == 5) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Mining Fatigue'");
-            this.executeScenario("miningfatigue", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (miningfatigue)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (miningfatigue)");
-                }
-            }
-        }
-        if (event.getSlot() == 6) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Clear Inventory'");
-            this.executeScenario("clearinv", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (clearinv)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (clearinv)");
-                }
-            }
-        }
-        if (event.getSlot() == 7) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Roulette'");
-            this.executeScenario("roulette", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (roulette)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (roulette)");
-                }
-            }
-        }
-        if (event.getSlot() == 8) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Silverfish'");
-            this.executeScenario("silverfish", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (silverfish)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (silverfish)");
-                }
-            }
-        }
-        if (event.getSlot() == 9) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Instant Damage'");
-            this.executeScenario("instantdamage", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (instantdamage)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (instantdamage)");
-                }
-            }
-        }
-        if (event.getSlot() == 10) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Typing Test'");
-            this.executeScenario("typingtest", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (typingtest)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (typingtest)");
-                }
-            }
-        }
-        if (event.getSlot() == 12) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Gapple'");
-            this.executeScenario("gapple", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (gapple)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (gapple)");
-                }
-            }
-        }
-        if (event.getSlot() == 13) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Maniac Miner'");
-            this.executeScenario("maniacminer", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (maniacminer)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (maniacminer)");
-                }
-            }
-        }
-        if (event.getSlot() == 14) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Efficiency'");
-            this.executeScenario("efficiency", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (efficiency)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (efficiency)");
-                }
-            }
-        }
-        if (event.getSlot() == 15) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Fire Resistance'");
-            this.executeScenario("fireres", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fireres)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fireres)");
-                }
-            }
-        }
-        if (event.getSlot() == 16) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Invincibility'");
-            this.executeScenario("invincibility", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (invincibility)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (invincibility)");
-                }
-            }
-        }
-        if (event.getSlot() == 18) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Dog'");
-            this.executeScenario("dog", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (dog)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (dog)");
-                }
-            }
-        }
-        if (event.getSlot() == 19) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'No Moving'");
-            this.executeScenario("nomoving", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (nomoving)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (nomoving)");
-                }
-            }
-        }
-        if (event.getSlot() == 20) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Fake Fly'");
-            this.executeScenario("fakefly", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fakefly)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (fakefly)");
-                }
-            }
-        }
-        if (event.getSlot() == 21) {
-            player.sendMessage(ChatColor.LIGHT_PURPLE + "Executed scenario 'Ankle Monitor'");
-            this.executeScenario("anklemonitor", null);
-            console.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (anklemonitor)");
-            for (Player playerOP : Bukkit.getOnlinePlayers()) {
-                if (playerOP.isOp()) {
-                    playerOP.sendMessage(ChatColor.RED + player.getName() + " executed a scenario. (anklemonitor)");
-                }
-            }
-        }
-    }
     /* public void executeFireworkBarrage() {
         new BukkitRunnable() {
             public void run() {
@@ -1551,6 +1611,46 @@ public class Main extends JavaPlugin implements Listener {
             }
         }.runTaskLater(this, 20);
     } */
+
+    public ItemStack FireballLauncherCooldown() {
+
+
+        ItemStack fblc = new ItemStack(Material.WOODEN_SWORD);
+        ItemMeta meta = (ItemMeta) fblc.getItemMeta();
+        fblc.setItemMeta(meta);
+        meta.setDisplayName(ChatColor.GRAY +  "" + ChatColor.BOLD + "Fireball Launcher");
+        List<String> lore = new ArrayList<String>();
+        lore.add(ChatColor.BOLD + "");
+        lore.add(ChatColor.RED + "On Cooldown! (5 Seconds)");
+        meta.setLore(lore);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+        fblc.setItemMeta(meta);
+
+        return fblc;
+    }
+
+    public ItemStack FireballLauncher() {
+
+
+        ItemStack fbl = new ItemStack(Material.DIAMOND_SWORD);
+        ItemMeta meta = (ItemMeta) fbl.getItemMeta();
+        fbl.setItemMeta(meta);
+        meta.setDisplayName(ChatColor.RED +  "" + ChatColor.BOLD + "Fireball Launcher");
+        List<String> lore = new ArrayList<String>();
+        lore.add(ChatColor.BOLD + "");
+        lore.add(ChatColor.RED + "Left Click to launch a fireball");
+        lore.add(ChatColor.RED + "Cooldown: 5 seconds");
+        meta.setLore(lore);
+        meta.addEnchant(Enchantment.KNOCKBACK, 3, true);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+
+        fbl.setItemMeta(meta);
+
+        return fbl;
+    }
 
     public ItemStack Berry() {
 
@@ -1672,28 +1772,39 @@ public class Main extends JavaPlugin implements Listener {
 
     public void createInv() {
 
-        Inv = Bukkit.createInventory(null, 27, ChatColor.RED + "Execute Scenario");
+        Inv = Bukkit.createInventory(null, 36, ChatColor.RED + "Scenarios");
 
         ItemStack nomore = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta nomoreItemMeta = nomore.getItemMeta();
-        nomoreItemMeta.setDisplayName(ChatColor.WHITE + "Nothing");
+        nomoreItemMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Nothing");
+        List<String> nomoreLore = new ArrayList<String>();
+        nomoreLore.add(ChatColor.DARK_PURPLE + "Select an item to trigger a scenario!");
+        nomoreItemMeta.setLore(nomoreLore);
         nomore.setItemMeta(nomoreItemMeta);
-        Inv.setItem(22, nomore);
-        Inv.setItem(23, nomore);
+        Inv.setItem(12, nomore);
+        Inv.setItem(13, nomore);
+        Inv.setItem(14, nomore);
+        Inv.setItem(15, nomore);
+        Inv.setItem(16, nomore);
+        Inv.setItem(17, nomore);
         Inv.setItem(24, nomore);
         Inv.setItem(25, nomore);
         Inv.setItem(26, nomore);
+        Inv.setItem(32, nomore);
+        Inv.setItem(33, nomore);
+        Inv.setItem(34, nomore);
+        Inv.setItem(35, nomore);
 
         ItemStack ankle = new ItemStack(Material.GOLDEN_BOOTS);
         ItemMeta ankleItemMeta = ankle.getItemMeta();
         ankleItemMeta.setDisplayName(ChatColor.DARK_BLUE + "Ankle Monitor");
         List<String> ankleLore = new ArrayList<String>();
-        ankleLore.add(ChatColor.BLUE + "Sets everyone's boots to an Ankle Monitor which gives them permanent slowness 2 and resistance 1.");
+        ankleLore.add(ChatColor.BLUE + "Sets everyone's boots to an Ankle Monitor");
         ankleLore.add(ChatColor.BLUE + "which gives them permanent slowness 2 and resistance 1.");
         ankleItemMeta.setLore(ankleLore);
         ankleItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         ankle.setItemMeta(ankleItemMeta);
-        Inv.setItem(21, ankle);
+        Inv.setItem(31, ankle);
 
         ItemStack fake = new ItemStack(Material.ELYTRA);
         ItemMeta fakeItemMeta = fake.getItemMeta();
@@ -1704,7 +1815,7 @@ public class Main extends JavaPlugin implements Listener {
         fakeItemMeta.setLore(fakeLore);
         fakeItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         fake.setItemMeta(fakeItemMeta);
-        Inv.setItem(20, fake);
+        Inv.setItem(30, fake);
 
         ItemStack no = new ItemStack(Material.ENDER_PEARL);
         ItemMeta noItemMeta = no.getItemMeta();
@@ -1714,7 +1825,7 @@ public class Main extends JavaPlugin implements Listener {
         noItemMeta.setLore(noLore);
         noItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         no.setItemMeta(noItemMeta);
-        Inv.setItem(19, no);
+        Inv.setItem(29, no);
 
         ItemStack dog = new ItemStack(Material.BONE);
         ItemMeta dogItemMeta = dog.getItemMeta();
@@ -1724,7 +1835,7 @@ public class Main extends JavaPlugin implements Listener {
         dogItemMeta.setLore(dogLore);
         dogItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         dog.setItemMeta(dogItemMeta);
-        Inv.setItem(18, dog);
+        Inv.setItem(28, dog);
 
         ItemStack special = new ItemStack(Material.BLUE_STAINED_GLASS_PANE);
         ItemMeta specialMeta = special.getItemMeta();
@@ -1732,7 +1843,7 @@ public class Main extends JavaPlugin implements Listener {
         specialMeta.addEnchant(Enchantment.SILK_TOUCH,1,true);
         specialMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         special.setItemMeta(specialMeta);
-        Inv.setItem(17, special);
+        Inv.setItem(27, special);
 
         ItemStack invc = new ItemStack(Material.IRON_BLOCK);
         ItemMeta invcItemMeta = invc.getItemMeta();
@@ -1742,7 +1853,7 @@ public class Main extends JavaPlugin implements Listener {
         invcItemMeta.setLore(invcLore);
         invcItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         invc.setItemMeta(invcItemMeta);
-        Inv.setItem(16, invc);
+        Inv.setItem(23, invc);
 
         ItemStack fire = new ItemStack(Material.LAVA_BUCKET);
         ItemMeta fireItemMeta = fire.getItemMeta();
@@ -1752,7 +1863,7 @@ public class Main extends JavaPlugin implements Listener {
         fireItemMeta.setLore(fireLore);
         fireItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         fire.setItemMeta(fireItemMeta);
-        Inv.setItem(15, fire);
+        Inv.setItem(22, fire);
 
         ItemStack efficiency = new ItemStack(Material.IRON_PICKAXE);
         ItemMeta efficiencyItemMeta = efficiency.getItemMeta();
@@ -1763,7 +1874,7 @@ public class Main extends JavaPlugin implements Listener {
         efficiencyItemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         efficiencyItemMeta.addEnchant(Enchantment.DIG_SPEED,1,true);
         efficiency.setItemMeta(efficiencyItemMeta);
-        Inv.setItem(14, efficiency);
+        Inv.setItem(21, efficiency);
 
         ItemStack maniac = new ItemStack(Material.GOLDEN_PICKAXE);
         ItemMeta maniacItemMeta = maniac.getItemMeta();
@@ -1773,7 +1884,7 @@ public class Main extends JavaPlugin implements Listener {
         maniacItemMeta.setLore(maniacLore);
         maniacItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         maniac.setItemMeta(maniacItemMeta);
-        Inv.setItem(13, maniac);
+        Inv.setItem(20, maniac);
 
         ItemStack gap = new ItemStack(Material.GOLDEN_APPLE);
         ItemMeta gapItemMeta = gap.getItemMeta();
@@ -1783,7 +1894,7 @@ public class Main extends JavaPlugin implements Listener {
         gapItemMeta.setLore(gapLore);
         gapItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         gap.setItemMeta(gapItemMeta);
-        Inv.setItem(12, gap);
+        Inv.setItem(19, gap);
 
         ItemStack good = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
         ItemMeta goodMeta = good.getItemMeta();
@@ -1791,7 +1902,7 @@ public class Main extends JavaPlugin implements Listener {
         goodMeta.addEnchant(Enchantment.SILK_TOUCH,1,true);
         goodMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         good.setItemMeta(goodMeta);
-        Inv.setItem(11, good);
+        Inv.setItem(18, good);
 
         ItemStack typing = new ItemStack(Material.PAPER);
         ItemMeta typingItemMeta = typing.getItemMeta();
@@ -1801,7 +1912,7 @@ public class Main extends JavaPlugin implements Listener {
         typingItemMeta.setLore(typingLore);
         typingItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         typing.setItemMeta(typingItemMeta);
-        Inv.setItem(10, typing);
+        Inv.setItem(11, typing);
 
         ItemStack damage = new ItemStack(Material.SPLASH_POTION);
         ItemMeta damageItemMeta = damage.getItemMeta();
@@ -1814,7 +1925,7 @@ public class Main extends JavaPlugin implements Listener {
         meta.setColor(Color.BLACK);
         meta.addCustomEffect(new PotionEffect(PotionEffectType.HARM, 0, 1), true);
         damage.setItemMeta(meta);
-        Inv.setItem(9, damage);
+        Inv.setItem(10, damage);
 
         ItemStack silverfish = new ItemStack(Material.SILVERFISH_SPAWN_EGG);
         ItemMeta silverfishItemMeta = silverfish.getItemMeta();
@@ -1906,6 +2017,7 @@ public class Main extends JavaPlugin implements Listener {
         badMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
         bad.setItemMeta(badMeta);
         Inv.setItem(0, bad);
+        Inv.setItem(9, bad);
     }
 
 }
