@@ -20,6 +20,8 @@ it was originally going to be in multiple files but half way into the project i 
 holy shit yes i had some pretty inefficient code in there
 ## bro why commands so inconsistant
 idk fix it urself 
+## why are things called server, aren't they supposed to be called world?
+yes but i like calling them servers so servers it is.
 # issues
 ## When updating scoreboard regardless of wether or not the config file's value is enabled it dsplays "OFF" until it is refreshed with /blockly.
 - just kidding! i removed it.
