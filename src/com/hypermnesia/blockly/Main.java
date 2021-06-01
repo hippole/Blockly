@@ -456,7 +456,7 @@ public class Main extends JavaPlugin implements Listener {
                     "Temporary values are reset to the defaults in this file once the server is reloaded/restarted." +
                     "Note: When setting the 'block-limit' variable set the variable to 1 higher than what you want. ex: 0 = 1, 1 = 2");
             saveConfig();
-            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
+            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 200, randomZ, 0, 0);
             WorldCreator wc = new WorldCreator("lobby");
             wc.environment(World.Environment.NORMAL);
             wc.type(WorldType.FLAT);
@@ -507,6 +507,9 @@ public class Main extends JavaPlugin implements Listener {
                         player.sendMessage(ChatColor.RED + "Invalid Value Dumbass, Your options are 'start'  or 'end'");
                         return true;
                     }
+                    if (!(args[0].equalsIgnoreCase("start") || args[0].equalsIgnoreCase("end"))) {
+                        player.sendMessage(ChatColor.RED + "Invalid Value Dumbass, Your options are 'start'  or 'end'");
+                    }
                     if (args[0].equalsIgnoreCase("start")) {
                         if (gameIsRunning == true) {
                             player.sendMessage(ChatColor.RED + "The game is already running!");
@@ -529,6 +532,8 @@ public class Main extends JavaPlugin implements Listener {
                         list.add("EFFICIENCY");
                         list.add("FIRERES");
                         list.add("INVINCIBILITY");
+                        dodoBiomes.add(Biome.SWAMP);
+                        dodoBiomes.add(Biome.SWAMP_HILLS);
                         dodoBiomes.add(Biome.OCEAN);
                         dodoBiomes.add(Biome.COLD_OCEAN);
                         dodoBiomes.add(Biome.DEEP_OCEAN);
@@ -550,7 +555,7 @@ public class Main extends JavaPlugin implements Listener {
                                                 .getBiome(eventStartLoc.getBlockX(), eventStartLoc.getBlockY(), eventStartLoc.getBlockZ()))) {
                                             randomX = randomWithRange(1000, 2500);
                                             randomZ = randomWithRange(1000, 2500);
-                                            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
+                                            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 200, randomZ, 0, 0);
                                         }
                                         player.teleport(eventStartLoc);
                                         Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1).playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0F, 1.0F);
@@ -564,12 +569,8 @@ public class Main extends JavaPlugin implements Listener {
                                 }
 
                                 for (Player player : Bukkit.getOnlinePlayers()) {
-                                    try {
-                                        Bukkit.getServer().getWorld("lobby").playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0F, 1.0F);
+                                        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 6.9F, 6.9F);
                                         player.sendTitle(ChatColor.RED + "Teleporting in " + time, ChatColor.GREEN + "Made by hippo (Hypermnesia)", 10, 20, 10);
-                                    } catch (NullPointerException e) {
-
-                                    }
                                 }
                                 this.time--;
                             }
@@ -578,7 +579,6 @@ public class Main extends JavaPlugin implements Listener {
                         new BukkitRunnable() {
                             public void run() {
                                 World world = Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1);
-                                player.getActivePotionEffects().clear();
                                 int otherBlockLimit = blockLimit + 1;
                                 if (blockLimitEnabled) {
                                     Bukkit.broadcastMessage(ChatColor.GOLD + "Event Started! " + ChatColor.AQUA + "First one to mine " + ChatColor.GOLD + otherBlockLimit + " " + Material.matchMaterial(targetBlock) + ChatColor.AQUA + " wins! Good Luck!");
@@ -596,6 +596,7 @@ public class Main extends JavaPlugin implements Listener {
                                     Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1).playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0F, 1.0F);
                                     player.sendMessage(ChatColor.DARK_GRAY + "You are playing on server " + player.getPlayer().getWorld().getName());
                                     world.setPVP(true);
+                                    player.getInventory().clear();
                                     jsonObject.clear();
                                     jsonObject.put(String.valueOf(player.getUniqueId()), 0);
                                 }
@@ -674,11 +675,11 @@ public class Main extends JavaPlugin implements Listener {
                             Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1).playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0F, 1.0F);
                             playerEnd.getInventory().clear();
                             playerEnd.setGameMode(GameMode.ADVENTURE);
-                            createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
-                            Bukkit.unloadWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), false);
-                            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
                         }
                         Bukkit.broadcastMessage(ChatColor.LIGHT_PURPLE + "Challenge Ended, Host ended challenge prematurely.");
+                        createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
+                        Bukkit.unloadWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), false);
+                        eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 200, randomZ, 0, 0);
                         return true;
                     }
 
@@ -727,7 +728,7 @@ public class Main extends JavaPlugin implements Listener {
                 }
                 Player player = (Player) sender;
                 List<String> list = new ArrayList<String>();
-                if (player.hasPermission("hippospeak.use")) {
+                if (player.getUniqueId().toString().equals("7e2ad381-193e-40e2-adfe-8df266134d8c")) {
                     if (args.length == 0) {
                         player.sendMessage(ChatColor.RED + "Usage: /hippospeak <message>");
                         return true;
@@ -852,7 +853,8 @@ public class Main extends JavaPlugin implements Listener {
                             player.sendMessage(ChatColor.DARK_AQUA + "Creating new game server. Please allow up to a minute for the server to create.");
                             player.sendMessage(ChatColor.DARK_AQUA + "The server will lag.");
                             createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
-                            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
+                            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 200, randomZ, 0, 0);
+                            player.sendMessage(ChatColor.GREEN + "Server Created!");
                         }
                         if (args[0].equalsIgnoreCase("getactivegameserver")) {
                             player.sendMessage(ChatColor.DARK_PURPLE + "Current game server: " + ChatColor.LIGHT_PURPLE + Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1).getName());
@@ -879,7 +881,7 @@ public class Main extends JavaPlugin implements Listener {
                         if (args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("g")) {
                             if (player.hasPermission("blocklygive.use")) {
                                 if (args[1].equalsIgnoreCase("list")) {
-                                    player.sendMessage(ChatColor.GREEN + "List of available items: opBerry, stickOfBan, fireballLauncher");
+                                    player.sendMessage(ChatColor.GREEN + "List of available items: opBerry, stickOfBan, fireballLauncher, cynide");
                                 }
                                 if (args[1].equalsIgnoreCase("opberry")) {
                                     try {
@@ -902,8 +904,8 @@ public class Main extends JavaPlugin implements Listener {
                                         return true;
                                     }
                                 }
-                                    if (args[1].equalsIgnoreCase("stickofban") || args[1].equalsIgnoreCase("sob")) {
-                                        try {
+                                if (args[1].equalsIgnoreCase("stickofban") || args[1].equalsIgnoreCase("sob")) {
+                                    try {
                                         if (!(sender instanceof Player)) {
                                             sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
                                             return true;
@@ -913,22 +915,22 @@ public class Main extends JavaPlugin implements Listener {
                                             player.sendMessage(ChatColor.RED + "Inventory Full! Free up some space and do the command again.");
                                             return false;
                                         }
-                                            for (int x = 0; x < Integer.parseInt(args[2]); x++) {
-                                                player.getInventory().addItem(StickOfBan());
-                                            }
-                                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1.0F, 1.0F);
-                                            player.sendMessage(ChatColor.GREEN + "Successfully gave you " + Integer.parseInt(args[2]) + ChatColor.GOLD + " " +
-                                                    ChatColor.BOLD + "Stick of Ban" + ChatColor.GREEN + "!");
-                                            player.sendMessage(ChatColor.GOLD + "Be careful with that stick! It's real" + ChatColor.RED + " dangerous");
-                                        } catch (ArrayIndexOutOfBoundsException e) {
+                                        for (int x = 0; x < Integer.parseInt(args[2]); x++) {
                                             player.getInventory().addItem(StickOfBan());
-                                            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1.0F, 1.0F);
-                                            player.sendMessage(ChatColor.GREEN + "Successfully gave you an " + ChatColor.GOLD + "" +
-                                                    ChatColor.BOLD + "Stick of Ban" + ChatColor.GREEN + "!");
-                                            player.sendMessage(ChatColor.GOLD + "Be careful with that stick! It's real" + ChatColor.RED + " dangerous");
-                                            return true;
                                         }
+                                        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1.0F, 1.0F);
+                                        player.sendMessage(ChatColor.GREEN + "Successfully gave you " + Integer.parseInt(args[2]) + ChatColor.GOLD + " " +
+                                                ChatColor.BOLD + "Stick of Ban" + ChatColor.GREEN + "!");
+                                        player.sendMessage(ChatColor.GOLD + "Be careful with that stick! It's real" + ChatColor.RED + " dangerous");
+                                    } catch (ArrayIndexOutOfBoundsException e) {
+                                        player.getInventory().addItem(StickOfBan());
+                                        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1.0F, 1.0F);
+                                        player.sendMessage(ChatColor.GREEN + "Successfully gave you an " + ChatColor.GOLD + "" +
+                                                ChatColor.BOLD + "Stick of Ban" + ChatColor.GREEN + "!");
+                                        player.sendMessage(ChatColor.GOLD + "Be careful with that stick! It's real" + ChatColor.RED + " dangerous");
+                                        return true;
                                     }
+                                }
 
                                 if (args[1].equalsIgnoreCase("fireballlauncher") || args[1].equalsIgnoreCase("fbl")) {
                                     try {
@@ -956,14 +958,36 @@ public class Main extends JavaPlugin implements Listener {
                                     }
                                 }
 
+                                if (args[1].equalsIgnoreCase("cynide")) {
+                                    try {
+                                        if (!(sender instanceof Player)) {
+                                            sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
+                                            return true;
+                                        }
+                                        if (player.getInventory().firstEmpty() == -1) {
+                                            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_VILLAGER_HURT, 1.0F, 1.0F);
+                                            player.sendMessage(ChatColor.RED + "Inventory Full! Free up some space and do the command again.");
+                                            return false;
+                                        }
+                                        for (int x = 0; x < Integer.parseInt(args[2]); x++) {
+                                            player.getInventory().addItem(Cynide());
+                                        }
+                                        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_DEATH, 1.0F, 1.0F);
+                                        player.sendMessage(ChatColor.GREEN + "Successfully gave you " + Integer.parseInt(args[2]) + ChatColor.DARK_RED + "Cynide" + ChatColor.GREEN + "!");
+                                    } catch (ArrayIndexOutOfBoundsException e) {
+                                        player.getInventory().addItem(Cynide());
+                                        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_DEATH, 1.0F, 1.0F);
+                                        player.sendMessage(ChatColor.GREEN + "Successfully gave you an " + ChatColor.DARK_RED + "Cynide" + ChatColor.GREEN + "!");
+                                        return true;
+                                    }
+                                }
                             } else {
                                 player.sendMessage(ChatColor.RED + "Insufficient Permission.");
                             }
                         }
 
 
-
-                        } else {
+                    } else {
                         player.sendMessage(ChatColor.RED + "Insufficient Permission.");
                     }
                 } catch (NumberFormatException e) {
@@ -972,33 +996,124 @@ public class Main extends JavaPlugin implements Listener {
                     return true;
                 }
             }
-            if (label.equalsIgnoreCase("yeetWorld") || label.equalsIgnoreCase("yw")) {
+
+                    if (label.equalsIgnoreCase("yeetWorld") || label.equalsIgnoreCase("yw")) {
+                        try {
+                            if (!(sender instanceof Player)) {
+                                sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
+                                return true;
+                            }
+                            Player player = (Player) sender;
+                            if (player.hasPermission("yeetworld.use")) {
+                                if (args.length == 0) {
+                                    player.sendMessage(ChatColor.RED + "Usage: /yeetworld <world>");
+                                    return true;
+                                }
+                                if (args[0].equalsIgnoreCase("lobby")) {
+                                    player.sendMessage(ChatColor.RED + "NO");
+                                    return true;
+                                }
+                                player.sendMessage(ChatColor.RED + "Boom, World " + args[0].toLowerCase() + " was yeeted. ");
+                                yeetWorld(Bukkit.getWorld(args[0]));
+                            } else {
+                                player.sendMessage(ChatColor.RED + "Insufficient Permission.");
+                            }
+                        } catch (NullPointerException e) {
+                            Player player = (Player) sender;
+                            player.sendMessage(ChatColor.RED + "Failed. The world does not exist.");
+                        }
+                    }
+
+            if (label.equalsIgnoreCase("hipponick")) {
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
+                    return true;
+                }
+                Player player = (Player) sender;
+                if (player.getUniqueId().toString().equals("7e2ad381-193e-40e2-adfe-8df266134d8c")) {
+                    if (args.length == 0) {
+                        player.sendMessage(ChatColor.RED + "Usage: /hipponick <name>");
+                        return true;
+                    }
+                    if (args[0].equalsIgnoreCase(".reset")) {
+                        player.setDisplayName(player.getName());
+                        player.sendMessage(ChatColor.GREEN + "Your nick has been reset");
+                        return true;
+                    }
+                    player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "Your new nick is " + ChatColor.GOLD + "" + args[0]);
+                    player.setDisplayName(args[0]);
+                    return true;
+                } else {
+                    player.sendMessage(ChatColor.RED + "You are not hippo >:O");
+                }
+            }
+
+            if (label.equalsIgnoreCase("massspawn") || label.equalsIgnoreCase("ms")) {
                 try {
+                    Player player = (Player) sender;
                     if (!(sender instanceof Player)) {
                         sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
                         return true;
                     }
-                    Player player = (Player) sender;
-                    if (player.hasPermission("yeetworld.use")) {
+                    if (player.hasPermission("massspawn.use")) {
                         if (args.length == 0) {
-                            player.sendMessage(ChatColor.RED + "Usage: /yeetworld <world>");
+                            player.sendMessage(ChatColor.RED + "Usage: /massspawn <entity> <number>");
                             return true;
                         }
-                        if (args[0].equalsIgnoreCase("lobby")) {
-                            player.sendMessage(ChatColor.RED + "NO");
+                        if (args.length < 2) {
+                            player.sendMessage(ChatColor.RED + "Usage: /massspawn <entity> <number>");
                             return true;
                         }
-                        player.sendMessage(ChatColor.RED + "Boom, World " + args[0].toLowerCase() + " was yeeted. ");
-                        yeetWorld(Bukkit.getWorld(args[0]));
+                        for (int x = 0; x < Integer.parseInt(args[1]); x++) {
+                            player.getWorld().spawnEntity(player.getLocation(), EntityType.valueOf(args[0]));
+                        }
+                        player.sendMessage(ChatColor.GREEN + "Successfully spawned " + args[1] + " " + args[0]);
                     }
-                } catch (NullPointerException e) {
+                } catch (NumberFormatException e) {
                     Player player = (Player) sender;
-                        player.sendMessage(ChatColor.RED + "Failed. The world does not exist.");
+                        player.sendMessage(ChatColor.RED + "Argument needs to be a number!");
+                        return true;
+                }
+            }
+
+            if (label.equalsIgnoreCase("executeplayer") || label.equalsIgnoreCase("ep")) {
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
+                    return true;
+                }
+                Player player = (Player) sender;
+                if (player.hasPermission("executeplayer.use")) {
+                    if (args.length == 0) {
+                        player.sendMessage(ChatColor.RED + "Usage: /executeplayer <target>");
+                        return true;
+                    }
+                    if (args[0].equalsIgnoreCase(player.getName())) {
+                        player.sendMessage(ChatColor.RED + "You can't execute yourself.");
+                        return true;
+                    }
+                    player.sendMessage(ChatColor.RED + "Executing target " + args[0]);
+                    Player target = getServer().getPlayer(args[0]);
+                    if (!target.isDead()) {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                target.getWorld().strikeLightning(target.getLocation());
+                                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.0F, 1.0F);
+                                if (target.isDead()) {
+                                    player.sendMessage(ChatColor.RED + "Target eliminated");
+                                    cancel();
+                                }
+                            }
+                        }.runTaskTimer(this, 5, 5);
+                    } else {
+                        player.sendMessage(ChatColor.RED + "The target is already dead!");
+                    }
+                } else {
+                    player.sendMessage(ChatColor.RED + "Insufficient Permission");
                 }
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return false;
     }
@@ -1124,7 +1239,8 @@ public class Main extends JavaPlugin implements Listener {
             if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
                 if (((Player) event.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName().contains(ChatColor.GOLD + "" + ChatColor.BOLD + "Stick of Ban")) {
                     if (event.getDamager().isOp()) {
-                        player.getWorld().spawnEntity(player.getLocation(), EntityType.LIGHTNING);
+                        player.getWorld().strikeLightning(player.getLocation());
+                        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT,1.0F,1.0F);
                         Bukkit.getBanList(BanList.Type.NAME).addBan(player.getName(), ChatColor.RED + "You were given a third degree burn by " + ChatColor.GOLD + "The Stick of Ban" + ChatColor.RED + ".", null, null);
                         player.kickPlayer(ChatColor.RED + "You were given a third degree burn by " + ChatColor.GOLD + "The Stick of Ban" + ChatColor.RED + ".");
                     } else {
@@ -1235,6 +1351,7 @@ public class Main extends JavaPlugin implements Listener {
             sendToServer(event.getPlayer(), "lobby");
             event.setRespawnLocation(loc);
             event.getPlayer().setGameMode(GameMode.ADVENTURE);
+            event.getPlayer().setSaturation(20);
         } else {
             event.setRespawnLocation(eventStartLoc);
             new BukkitRunnable() {
@@ -1569,7 +1686,7 @@ public class Main extends JavaPlugin implements Listener {
             }.runTaskLater(this, 100);
             createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
             Bukkit.unloadWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), false);
-            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
+            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 200, randomZ, 0, 0);
         }
 
     }
@@ -1591,7 +1708,7 @@ public class Main extends JavaPlugin implements Listener {
             }.runTaskLater(this, 100);
             createNewGameServer(Integer.toString(this.randomWithRange(10000, 99999), 16));
             Bukkit.unloadWorld(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), false);
-            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 150, randomZ, 0, 0);
+            eventStartLoc = new Location(Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1), randomX, 200, randomZ, 0, 0);
         }
 
     }
@@ -1611,6 +1728,37 @@ public class Main extends JavaPlugin implements Listener {
             }
         }.runTaskLater(this, 20);
     } */
+
+    public ItemStack Cynide() {
+
+        ItemStack cynide = new ItemStack(Material.POTION);
+        ItemMeta itemMeta = cynide.getItemMeta();
+        itemMeta.setDisplayName(ChatColor.DARK_RED + "Cynide");
+        List<String> lore = new ArrayList<String>();
+        lore.add(ChatColor.RED + "Yes it's spelled wrong on purpose. What are you going to do about it.");
+        itemMeta.setLore(lore);
+        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+        PotionMeta potionMeta = ((PotionMeta) itemMeta);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.CONFUSION, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.POISON, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.BAD_OMEN, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.GLOWING, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.ABSORPTION, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.UNLUCK, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.HUNGER, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.LEVITATION, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.WEAKNESS, 1200, 0), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.JUMP, 1200, 0), true);
+        potionMeta.setColor(Color.FUCHSIA);
+        cynide.setItemMeta(potionMeta);
+
+        return cynide;
+    }
 
     public ItemStack FireballLauncherCooldown() {
 
