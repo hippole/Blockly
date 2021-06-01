@@ -27,3 +27,4 @@ yes but i like calling them servers so servers it is.
 - just kidding! i removed it.
 ## plugin needs to be reloaded to work.
 - fixed
+- sike. instead i just put a message to send cuz idfk how to fix
