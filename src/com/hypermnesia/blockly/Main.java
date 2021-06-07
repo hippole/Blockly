@@ -2,16 +2,24 @@ package com.hypermnesia.blockly;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.minecraft.server.v1_16_R3.*;
 import org.bukkit.*;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
+import org.bukkit.craftbukkit.v1_16_R3.CraftServer;
+import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
@@ -37,6 +45,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.*;
+import org.bukkit.scoreboard.Scoreboard;
 import org.json.simple.JSONObject;
 
 import java.io.File;
@@ -65,9 +74,10 @@ public class Main extends JavaPlugin implements Listener {
     private int randomZ = this.randomWithRange(1000, 2500);
     private Location eventStartLoc;
     private List<Biome> dodoBiomes = new ArrayList<Biome>();
-    private Map<String, Integer> lb = new TreeMap();
+    private Map<String, Integer> lb = new TreeMap<String, Integer>();
     private Inventory Inv;
     private ConsoleCommandSender console = getServer().getConsoleSender();
+    private EntityPlayer npc;
 
 
 
@@ -441,6 +451,33 @@ public class Main extends JavaPlugin implements Listener {
         return world;
     }
 
+    public static Player getNearestPlayer() {
+        Player nearest = null;
+        for (Player p : Bukkit.getWorld("lobby").getPlayers()) {
+                if (nearest == null) nearest = p;
+                else if (p.getLocation().distance(new Location(Bukkit.getWorld("lobby"), 11.5, 6.0, -4.4)) < nearest.getLocation().distance(new Location(Bukkit.getWorld("lobby"), 11.5, 6.0, -4.4))) nearest = p;
+        }
+        return nearest;
+    }
+
+    void loadNPC(){
+        MinecraftServer nmsServer = ((CraftServer) Bukkit.getServer()).getServer();
+        WorldServer nmsWorld = ((CraftWorld)Bukkit.getWorld("lobby")).getHandle();
+        GameProfile gameProfile = new GameProfile(UUID.randomUUID(), "hippo");
+        npc = new EntityPlayer(nmsServer, nmsWorld, gameProfile, new PlayerInteractManager(nmsWorld));
+        Location location = new Location(Bukkit.getWorld("lobby"), 11.5, 6.0, -4.4, 73, -4);
+        npc.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+        ArmorStand armorStand = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
+        armorStand.setVisible(false);
+        armorStand.setInvulnerable(true);
+    }
+
+    public void lookNPCPacket(Entity npc, Player player, float yaw, float pitch) {
+        PlayerConnection connection = ((CraftPlayer)player).getHandle().playerConnection;
+        connection.sendPacket(new PacketPlayOutEntityHeadRotation(npc, (byte)((yaw + 180) * 256 / 360)));
+        connection.sendPacket(new PacketPlayOutEntity.PacketPlayOutEntityLook(npc.getId(), (byte)((yaw + 180) * 256 / 360), (byte)((pitch * -1) * 256 / 360), true));
+    }
+
     @Override
     public void onEnable() {
         try {
@@ -464,6 +501,7 @@ public class Main extends JavaPlugin implements Listener {
             this.getServer().getPluginManager().registerEvents(this, this);
             this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
             updateScoreboard();
+            loadNPC();
             Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                 public void run() {
                     for (Player player : Bukkit.getOnlinePlayers()) {
@@ -472,6 +510,18 @@ public class Main extends JavaPlugin implements Listener {
                     }
                 }
             }, 20, 20);
+            Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                public void run() {
+                    if (Bukkit.getWorld("lobby").getPlayers().size() != 0) {
+                        for (Player player : Bukkit.getWorld("lobby").getPlayers()) {
+                            Player nearest = getNearestPlayer();
+                            if (nearest != null) {
+                                lookNPCPacket(npc, player, nearest.getLocation().getYaw(), nearest.getLocation().getPitch());
+                            }
+                        }
+                    }
+                }
+            }, 5, 5);
             Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
                 public void run() {
                     if (extraPainMode) {
@@ -496,6 +546,7 @@ public class Main extends JavaPlugin implements Listener {
 
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         try {
+            addNPCPacket(npc, (Player) sender);
             if (label.equalsIgnoreCase("challenge") || label.equalsIgnoreCase("chal")) {
                 if (!(sender instanceof Player)) {
                     sender.sendMessage(ChatColor.RED + "This command cannot be executed from console, Try doing it in game.");
@@ -596,9 +647,9 @@ public class Main extends JavaPlugin implements Listener {
                                     Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1).playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0F, 1.0F);
                                     player.sendMessage(ChatColor.DARK_GRAY + "You are playing on server " + player.getPlayer().getWorld().getName());
                                     world.setPVP(true);
-                                    player.getInventory().clear();
                                     jsonObject.clear();
-                                    jsonObject.put(String.valueOf(player.getUniqueId()), 0);
+                                    for (Player p: Bukkit.getOnlinePlayers()) jsonObject.put(String.valueOf(p.getUniqueId()), 0);
+                                    updateScoreboard();
                                 }
                             }
                         }.runTaskLater(this, 260);
@@ -1118,8 +1169,11 @@ public class Main extends JavaPlugin implements Listener {
         return false;
     }
 
-    int stupidity(int ta) {
-        return ta;
+    public void addNPCPacket(EntityPlayer npc, Player player) {
+        PlayerConnection connection = ((CraftPlayer)player).getHandle().playerConnection;
+        connection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, npc));
+        connection.sendPacket(new PacketPlayOutNamedEntitySpawn(npc));
+        connection.sendPacket(new PacketPlayOutEntityHeadRotation(npc, (byte) (npc.yaw * 256 / 360)));
     }
 
     void updateScoreboard() {
@@ -1144,20 +1198,21 @@ public class Main extends JavaPlugin implements Listener {
         score3.setScore(8);
         score4.setScore(9);
         score5.setScore(10);
-        score6.setScore(11);
+        score6.setScore(11); 
         score7.setScore(2);
         score8.setScore(1);
         score9.setScore(0);
         if (gameIsRunning) {
-            ArrayList<String> players = new ArrayList<>(lb.keySet());
-            Bukkit.broadcastMessage(String.valueOf(lb));
+            List<String> players = new ArrayList<String>();
+            players.addAll(lb.keySet());
+            Bukkit.broadcastMessage(ChatColor.RED + String.valueOf(players));
             try {
                 objective.getScore(ChatColor.GOLD + "1. " + Bukkit.getPlayer(UUID.fromString(players.get(0)))
-                        .getName() + ": " + stupidity(lb.get(players.get(0)))).setScore(5);
+                        .getName() + ": " + lb.get(players.get(0))).setScore(5);
                 objective.getScore(ChatColor.GRAY + "2. " + Bukkit.getPlayer(UUID.fromString(players.get(1)))
-                        .getName() + ": " + stupidity(lb.get(players.get(1)))).setScore(4);
+                        .getName() + ": " + lb.get(players.get(1))).setScore(4);
                 objective.getScore(ChatColor.GREEN + "3. " + Bukkit.getPlayer(UUID.fromString(players.get(2)))
-                        .getName() + ": " + stupidity(lb.get(players.get(2)))).setScore(3);
+                        .getName() + ": " + lb.get(players.get(2))).setScore(3);
             } catch (IndexOutOfBoundsException e) {
                 playerAll.setScoreboard(scoreboard);
             }
@@ -1189,12 +1244,11 @@ public class Main extends JavaPlugin implements Listener {
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         List<Map.Entry<K, V>> list = new ArrayList<>(map.entrySet());
         list.sort(Map.Entry.comparingByValue());
-
+        Collections.reverse(list);
         Map<K, V> result = new LinkedHashMap<>();
         for (Map.Entry<K, V> entry : list) {
             result.put(entry.getKey(), entry.getValue());
         }
-
         return result;
     }
 
@@ -1214,8 +1268,8 @@ public class Main extends JavaPlugin implements Listener {
                                 lb.put(element, value);
                             }
                             event.getPlayer().sendMessage(String.valueOf(jsonObject));
-                            event.getPlayer().sendMessage(String.valueOf(lb));
-
+                            lb = sortByValue(lb);
+                            event.getPlayer().sendMessage("Current LB: " + String.valueOf(lb));
                             updateScoreboard();
                         } else {
                             gameIsRunning = false;
@@ -1366,6 +1420,9 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void onWorldChange (PlayerChangedWorldEvent event) {
         updateScoreboard();
+        if (event.getPlayer().getWorld().getName().equals("lobby")) {
+            addNPCPacket(npc, event.getPlayer());
+        }
     }
 
     @EventHandler
@@ -1375,6 +1432,7 @@ public class Main extends JavaPlugin implements Listener {
         if (!gameIsRunning) {
             sendToServer(event.getPlayer(), "lobby");
             event.getPlayer().setGameMode(GameMode.ADVENTURE);
+            addNPCPacket(npc, event.getPlayer());
         } else {
             sendToServer(event.getPlayer(), Bukkit.getWorlds().get(Bukkit.getWorlds().size() - 1).getName());
             event.getPlayer().teleport(eventStartLoc);
@@ -1432,6 +1490,13 @@ public class Main extends JavaPlugin implements Listener {
                 event.setCancelled(true);
             }
         }
+    }
+
+    @EventHandler()
+    public void onArmorStandClick(PlayerInteractAtEntityEvent event){
+            if (event.getRightClicked().getType() == EntityType.ARMOR_STAND) {
+                event.getPlayer().sendMessage(ChatColor.GOLD + "[Hippo]: " + ChatColor.GREEN + "hippo");
+            }
     }
 
     @EventHandler()
