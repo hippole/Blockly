@@ -8,6 +8,7 @@ oh yea i spent a month on this project
 ## dependencies
 spigot 1.16.5 <br />
 JSON-java
+ProtocalLib
 # if you wanna install for yourself
 just like download this and compile it. <br />
 if you have any questions... good fucking luck. <br />
