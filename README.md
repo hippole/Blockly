@@ -12,7 +12,7 @@ JSON-java
 just like download this and compile it. <br />
 if you have any questions... good fucking luck. <br />
 oh yea i also have a jar download in releases
-if you're too stupid heres a direct [link](https://github.com/Hypermnesiaa/Blockly/releases/download/v0.2/Blockly.jar)
+if you're too stupid heres a direct [link](https://www.youtube.com/watch?v=eBGIQ7ZuuiU) dont use this link yet its borken
 # things i want to adress
 ## OMG!!!!!11!! Y U NO PUT PLUGIN IN MORE TAHN 1 CLASS1!!!11 <br />
 it was originally going to be in multiple files but half way into the project i thought it'd be more efficient to slap it into 1 file. and it was! If you hate me you hate me. <br />
