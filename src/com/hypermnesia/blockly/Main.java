@@ -1,8 +1,15 @@
 package com.hypermnesia.blockly;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_16_R3.*;
@@ -19,7 +26,6 @@ import org.bukkit.craftbukkit.v1_16_R3.CraftServer;
 import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
@@ -30,6 +36,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
@@ -61,6 +68,7 @@ public class Main extends JavaPlugin implements Listener {
     private List<String> Lost = new ArrayList<String>();
     private boolean typingTestIsActive = false;
     private List<String> phrases = new ArrayList<String>();
+    private List<String> hippoList = new ArrayList<String>();
     private String chosenPhrase = "hippo is supreme";
     private Plugin plugin = this;
     private JSONObject jsonObject = new JSONObject();
@@ -455,21 +463,19 @@ public class Main extends JavaPlugin implements Listener {
         Player nearest = null;
         for (Player p : Bukkit.getWorld("lobby").getPlayers()) {
                 if (nearest == null) nearest = p;
-                else if (p.getLocation().distance(new Location(Bukkit.getWorld("lobby"), 11.5, 6.0, -4.4)) < nearest.getLocation().distance(new Location(Bukkit.getWorld("lobby"), 11.5, 6.0, -4.4))) nearest = p;
+                else if (p.getLocation().distance(new Location(Bukkit.getWorld("lobby"), 10.5, 6.25, 10.5)) < nearest.getLocation().distance(new Location(Bukkit.getWorld("lobby"), 11.5, 6.0, -4.4))) nearest = p;
         }
         return nearest;
     }
 
-    void loadNPC(){
+    void loadNPC() {
         MinecraftServer nmsServer = ((CraftServer) Bukkit.getServer()).getServer();
         WorldServer nmsWorld = ((CraftWorld)Bukkit.getWorld("lobby")).getHandle();
-        GameProfile gameProfile = new GameProfile(UUID.randomUUID(), "hippo");
+        GameProfile gameProfile = new GameProfile(UUID.randomUUID(), ChatColor.GOLD + "hippo");
+        gameProfile.getProperties().put("textures", new Property("textures", "ewogICJ0aW1lc3RhbXAiIDogMTYyMzA4MjAxMzU2MSwKICAicHJvZmlsZUlkIiA6ICI3MTZlMzYzZDUyNTA0NTgwYjc2N2U2OWQ0ZjY3OWEwZiIsCiAgInByb2ZpbGVOYW1lIiA6ICJCYWREb2dObyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lOGZhNDllZmY2ZmU5M2JkZWYwZjNjNWRjNWEyMDcxYTFlZGY3MzQ1YWY0ODYzZWFkMTk5MmJkYzlmZDgxNWNjIgogICAgfQogIH0KfQ==", "v4PEWYoa91CoFWNl2VxDyybsZoUCIuwTpoUWt1/g1n+Ij1tPMyrqY/aMcR25W8nlqG6E8z2vdSw0Qr+XCE6pzoamLj2W5Lkn0Yrx1h11VHnXbKC584SLR91cZSOIXV412K44W1eyag9Kv2LWeCLB3iXsyYF+Js2ozquL3ILwNhL0yeGkax2fYIxk0NdW6Bu2KhLYXNnXYGSYecb2Lq8GXKIQUo66l9PrDaEpq6hmdUR80ht/8vsUrr0LROrrSNXjuLBk6FTC3U38cpuxJzCvs6cPNpGBT3qjb1ONN2L8+oVwlcCjLar5FYSBLb6rzOWRdp3YO7t/Sj6pQCit2cTLK9ypaGwUSUMRfC+fi1CuVB4zA1FAfauZNC9p3iTbZGEppbHtACZx0cseEomKa92uCxRwyQPvwpU8z18TE4Q0RRzfIVgHvd/WJNWck/8mVYNfuiyfSA0RCLUabPD4nEYlO+/R0ezuyGaT1dy48Btu7UKZNchC8213xW3jyXHqTVF75kZutUGY+kIex46pOfQ5oHfaQqR/1uO5JeYh9Tflz40BfVqRmC0Msdcdwr3D2g9ikHWp7sjFqhu/TJAKneNcRaajl82kV1sYkmIpuj9EPV6OA8zJE8SXUdYwX5puCmXvCbtBiIt+THAkKQFaKeoauPkrU3Cfae3NYksD2PdK2/c="));
         npc = new EntityPlayer(nmsServer, nmsWorld, gameProfile, new PlayerInteractManager(nmsWorld));
-        Location location = new Location(Bukkit.getWorld("lobby"), 11.5, 6.0, -4.4, 73, -4);
+        Location location = new Location(Bukkit.getWorld("lobby"), 10.5, 6.25, 10.5, 135, 1);
         npc.setLocation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
-        ArmorStand armorStand = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
-        armorStand.setVisible(false);
-        armorStand.setInvulnerable(true);
     }
 
     public void lookNPCPacket(Entity npc, Player player, float yaw, float pitch) {
@@ -536,6 +542,37 @@ public class Main extends JavaPlugin implements Listener {
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("[Blockly] No idea why but you need to reload the server to have the plugin work.");
         }
+        ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(this, PacketType.Play.Client.USE_ENTITY) {
+            @Override
+            public void onPacketReceiving(PacketEvent event) {
+                    PacketContainer packet = event.getPacket();
+                    if (packet.getEntityUseActions().getValues().get(0).equals(EnumWrappers.EntityUseAction.INTERACT_AT)) {
+                        if (packet.getHands().getValues().get(0).equals(EnumWrappers.Hand.MAIN_HAND)) {
+                            if (npc.getId() == packet.getIntegers().getValues().get(0)) {
+                                try {
+                                    String phrase;
+                                    hippoList.clear();
+                                    hippoList.add("cronk");
+                                    hippoList.add("i smash kids and eat them");
+                                    hippoList.add("i'm fatter than ur mom");
+                                    hippoList.add("Xx_OogaBooga69420EpikSwagLord__xX");
+                                    hippoList.add("give me developer role right now");
+                                    hippoList.add("i dont like the flies on me, thats why i go into the water");
+                                    hippoList.add("-.-. --- -. --. .-. .- - ... / -.-- --- ..- / .-- .- ... - . -.. / -.-- --- ..- .-. / - .. -- . .-.-.-");
+                                    hippoList.add("Yo my people sorry for not being active the past days Will try to he more active But school uk - Hoogte 2021");
+                                    hippoList.add("get me out of this lava place, its hot i need water this cauldron is not enough.");
+                                    hippoList.add("i like beans - oBeanz 2021 (what a surprise)");
+                                    phrase = hippoList.get(randomWithRange(0, hippoList.size()));
+                                    event.getPlayer().sendMessage(ChatColor.GOLD + "hippo: " + ChatColor.YELLOW + phrase);
+                                    event.getPlayer().getWorld().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, 1.0F, 1.0F);
+                                } catch (IndexOutOfBoundsException e) {
+
+                                }
+                            }
+                        }
+                }
+            }
+        });
     }
 
 
@@ -631,6 +668,9 @@ public class Main extends JavaPlugin implements Listener {
                             public void run() {
                                 World world = Bukkit.getServer().getWorlds().get(Bukkit.getWorlds().size() - 1);
                                 int otherBlockLimit = blockLimit + 1;
+                                for (Player player : Bukkit.getOnlinePlayers()) {
+                                    player.getInventory().clear();
+                                }
                                 if (blockLimitEnabled) {
                                     Bukkit.broadcastMessage(ChatColor.GOLD + "Event Started! " + ChatColor.AQUA + "First one to mine " + ChatColor.GOLD + otherBlockLimit + " " + Material.matchMaterial(targetBlock) + ChatColor.AQUA + " wins! Good Luck!");
                                 }
@@ -769,7 +809,8 @@ public class Main extends JavaPlugin implements Listener {
                 } catch (ArrayIndexOutOfBoundsException e) {
                     Player player = (Player) sender;
                     player.getWorld().playSound(player.getLocation(),Sound.ITEM_BOOK_PAGE_TURN,1.0F,1.0F);
-                    createInv();  player.openInventory(Inv);
+                    createInv();
+                    player.openInventory(Inv);
                 }
             }
             if (label.equalsIgnoreCase("hippospeak") || label.equalsIgnoreCase("hs")) {
@@ -1493,19 +1534,12 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     @EventHandler()
-    public void onArmorStandClick(PlayerInteractAtEntityEvent event){
-            if (event.getRightClicked().getType() == EntityType.ARMOR_STAND) {
-                event.getPlayer().sendMessage(ChatColor.GOLD + "[Hippo]: " + ChatColor.GREEN + "hippo");
-            }
-    }
-
-    @EventHandler()
     public void onClick(PlayerInteractEvent event) {
-        if(event.getPlayer().getInventory().getItemInMainHand().getType().equals(Material.DIAMOND_SWORD))
-            if(event.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore()) {
+        if (event.getPlayer().getInventory().getItemInMainHand().getType().equals(Material.DIAMOND_SWORD))
+            if (event.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore()) {
                 Player player = event.getPlayer();
                 if (player.getInventory().getItemInMainHand().getItemMeta().getDisplayName().contains(ChatColor.RED +  "" + ChatColor.BOLD + "Fireball Launcher"))
-                    if(event.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore()) {
+                    if (event.getPlayer().getInventory().getItemInMainHand().getItemMeta().hasLore()) {
                         if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
                             player.launchProjectile(Fireball.class);
                             player.sendMessage(ChatColor.RED + "Launched Fireball!");
