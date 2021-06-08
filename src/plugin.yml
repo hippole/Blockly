@@ -1,18 +1,34 @@
 main: com.hypermnesia.blockly.Main
 name: Blockly
-version: 1.0.1
-author: Hippo (Hypermnesia)
-description: ur bad nerd get a life
+version: 1.1.1
+author: Hypermnesia
+description: This plugin has nothing to do with stupid drag and drop block programing language known as 'Scratch'. It was made up on the spot.
 api-version: 1.16
+depend: [ProtocolLib]
 
 commands:
   challenge:
     aliases: chal
+    description: Starts / ends the challenge
   executescenario:
     aliases: es
-  stickofban:
-    aliases: sob
+    description: Executes a scenario at any point in the game
   hippospeak:
     aliases: hs
-  targetblock:
-    aliases: tb
+    description: hippo's way to let people know hes angry
+  blockly:
+    aliases: b
+    description: Event settings command.
+  warp:
+    description: Sends you to a world.
+  yeetworld:
+    aliases: yw
+    description: Deletes a world (Cannot be restored)
+  hipponick:
+    description: Nicks the specified player. Use /hipponick .reset to reset your nick.
+  massspawn:
+    description: Spawns the specified amount of the specified entity.
+    aliases: ms
+  executeplayer:
+    description: Spawns lightning on the specified player until they're dead.
+    aliases: ep
